@@ -141,195 +141,188 @@ arguments
 
 end
 
-%%%% assign temporary variables for name-value arguments
+% Get number of boxes, groups, samples (including NaN), and missing values
+nBoxes = numel(unique(NameValueArgs.inputLabels));
+nGroups = nBoxes/NameValueArgs.groupSize;
+nSamples = size(inputData,1);
+nMissing = nnz(all(isnan(inputData),2));
 
-inputLabels = NameValueArgs.inputLabels;
+% Throw error if number of groups is not an integer
+if rem(nGroups,1) ~= 0
+    error('Number of input boxes is not divisible by number of groups.'); 
+end
 
-groupSize = NameValueArgs.groupSize;
-labelGroups = NameValueArgs.labelGroups;
-
-boxLabels = NameValueArgs.boxLabels;
-boxColors = NameValueArgs.boxColors;
-boxAlpha = NameValueArgs.boxAlpha;
-boxEdgeColors = NameValueArgs.boxEdgeColors;
-boxEdgeWidth = NameValueArgs.boxEdgeWidth;
-boxEdgeStyle = NameValueArgs.boxEdgeStyle;
-boxEdgeAlpha = NameValueArgs.boxEdgeAlpha;
-boxSpacing = NameValueArgs.boxSpacing;
-boxOrientation = NameValueArgs.boxOrientation;
-boxCurvature = NameValueArgs.boxCurvature;
-
-boxWidth = 0.5; %%%%
-
-medianColors = NameValueArgs.medianColors;
-medianWidth = NameValueArgs.medianWidth;
-medianStyle = NameValueArgs.medianStyle;
-medianAlpha = NameValueArgs.medianAlpha;
-
-whiskerColors = NameValueArgs.whiskerColors;
-whiskerWidth = NameValueArgs.whiskerWidth;
-whiskerStyle = NameValueArgs.whiskerStyle;
-whiskerAlpha = NameValueArgs.whiskerAlpha;
-
-outlierColors = NameValueArgs.outlierColors;
-outlierSize = NameValueArgs.outlierSize;
-outlierStyle = NameValueArgs.outlierStyle;
-outlierAlpha = NameValueArgs.outlierAlpha;
-outlierJitter = NameValueArgs.outlierJitter;
-
-plotPoints = NameValueArgs.plotPoints;
-pointColors = NameValueArgs.pointColors;
-pointSize = NameValueArgs.pointSize;
-pointStyle = NameValueArgs.pointStyle;
-pointAlpha = NameValueArgs.pointAlpha;
-pointJitter = NameValueArgs.pointJitter;
-
-plotLines = NameValueArgs.plotLines;
-lineColors = NameValueArgs.lineColors;
-lineWidth = NameValueArgs.lineWidth;
-lineStyle = NameValueArgs.lineStyle;
-lineAlpha = NameValueArgs.lineAlpha;
-
-plotLegend = NameValueArgs.plotLegend;
-lgdLabels = NameValueArgs.lgdLabels;
-lgdColors = NameValueArgs.lgdColors;
-lgdColumns = NameValueArgs.lgdColumns;
-lgdOrientation = NameValueArgs.lgdOrientation;
-lgdBox = NameValueArgs.lgdBox;
-lgdFontSize = NameValueArgs.lgdFontSize;
-lgdLineHeight = NameValueArgs.lgdLineHeight;
-lgdLineWidth = NameValueArgs.lgdLineWidth;
-lgdLocation = NameValueArgs.lgdLocation;
-lgdPosition = NameValueArgs.lgdPosition;
-
-%%%% calculate the number of boxes, groups, and samples
-
-nBoxes = numel(unique(inputLabels)); % get number of boxes to plot based on inputLabels
-nGroups = nBoxes/groupSize; % get number of box groups based on nBoxes and groupSize
-nSamples = size(inputData,1); % get number of samples per box (including NaN)
-nMissing = nnz(all(isnan(inputData),2)); % get number of samples that are all NaN
-
-uniqueLabels = sort(unique(inputLabels),'ascend')'; % get unique labels from inputLabels
-
-%%%% throw error if nGroups is not an integer
-
-if rem(nGroups,1) ~= 0, error('Number of input boxes is not divisible by number of groups.'); end
-
-%%%% reshape inputData into a column vector
-
+% Reshape input data into a column vector %%%% and get unique labels
 inputData = reshape(inputData,[],1);
+uniqueLabels = sort(unique(NameValueArgs.inputLabels),'ascend')'; %%%%
 
-%%%% set default box labels (numbered)
+% Set default box labels (numbered) if none are specified
+if isempty(NameValueArgs.boxLabels) && ...
+   NameValueArgs.groupSize == 1
 
-if isempty(boxLabels) && groupSize == 1, boxLabels = cellstr(string(1:nBoxes));
+    NameValueArgs.boxLabels = cellstr(string(1:nBoxes));
 
-elseif isempty(boxLabels) && groupSize > 1 && labelGroups == false, boxLabels = cellstr(string(1:groupSize));
+elseif isempty(NameValueArgs.boxLabels) && ...
+       NameValueArgs.groupSize > 1 && ...
+       NameValueArgs.labelGroups == false
 
-elseif isempty(boxLabels) && labelGroups == true, boxLabels = cellstr(string(1:nGroups));
+    NameValueArgs.boxLabels = cellstr(string(1:NameValueArgs.groupSize));
 
-end
-
-%%%% set default box face (gray), box edge (black), whisker (black), median (black), and outlier (gray) colors if not specified
-
-if isempty(boxColors), boxColors = repmat({[0.7,0.7,0.7]},[1,nBoxes]); elseif numel(boxColors) == 1, boxColors = repmat(boxColors,[1,nBoxes]); elseif numel(boxColors) == groupSize, boxColors = repmat(boxColors,[1,nGroups]); end
-if isempty(boxEdgeColors), boxEdgeColors = repmat({[0,0,0]},[1,nBoxes]); elseif numel(boxEdgeColors) == 1, boxEdgeColors = repmat(boxEdgeColors,[1,nBoxes]); elseif numel(boxEdgeColors) == groupSize, boxEdgeColors = repmat(boxEdgeColors,[1,nGroups]); end
-if isempty(whiskerColors), whiskerColors = repmat({[0,0,0]},[1,nBoxes]); elseif numel(whiskerColors) == 1, whiskerColors = repmat(whiskerColors,[1,nBoxes]); elseif numel(whiskerColors) == groupSize, whiskerColors = repmat(whiskerColors,[1,nGroups]); end
-if isempty(medianColors), medianColors = repmat({[0,0,0]},[1,nBoxes]); elseif numel(medianColors) == 1, medianColors = repmat(medianColors,[1,nBoxes]); elseif numel(medianColors) == groupSize, medianColors = repmat(medianColors,[1,nGroups]); end
-if isempty(outlierColors), outlierColors = boxColors; elseif numel(outlierColors) == 1, outlierColors = repmat(outlierColors,[1,nBoxes]); elseif numel(outlierColors) == groupSize, outlierColors = repmat(outlierColors,[1,nGroups]); end
-
-%%%% set default point (black) and line (black) colors if not specified
-
-if isempty(pointColors), pointColors = repmat({[0,0,0]},[nSamples,nBoxes]);
-
-elseif numel(pointColors) == 1, pointColors = repmat(pointColors,[nSamples,nBoxes]);
-
-elseif isvector(pointColors) && any(size(pointColors) == groupSize), pointColors = repmat(pointColors,[nSamples,nGroups]);
-
-elseif isvector(pointColors) && any(size(pointColors) == nBoxes), pointColors = repmat(pointColors,[nSamples,1]);
-
-elseif all(ismember(size(pointColors),[nSamples - nMissing,groupSize])), pointColors = repmat(pointColors,[1,nGroups]);
+elseif isempty(NameValueArgs.boxLabels) && ...
+       NameValueArgs.labelGroups == true
+    
+    NameValueArgs.boxLabels = cellstr(string(1:nGroups));
 
 end
 
-point_defaultIdx = cell2mat(cellfun(@(x)strcmp(x,'default'),pointColors,'UniformOutput',false));
+% Set default box colors (gray) if none are specified, or replicate
+% single or group-level color specification
+if isempty(NameValueArgs.boxColors)
+    NameValueArgs.boxColors = repmat({[0.7,0.7,0.7]},[1,nBoxes]);
+elseif numel(NameValueArgs.boxColors) == 1
+    NameValueArgs.boxColors = repmat(NameValueArgs.boxColors, ...
+                                     [1,nBoxes]);
+elseif numel(NameValueArgs.boxColors) == groupSize
+    NameValueArgs.boxColors = repmat(NameValueArgs.boxColors, ...
+                                     [1,nGroups]);
+end
 
+% Set default box edge colors (black) if none are specified, or replicate
+% single or group-level color specification
+if isempty(NameValueArgs.boxEdgeColors)
+    NameValueArgs.boxEdgeColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
+elseif numel(NameValueArgs.boxEdgeColors) == 1
+    NameValueArgs.boxEdgeColors = repmat(NameValueArgs.boxEdgeColors, ...
+                                         [1,nBoxes]);
+elseif numel(NameValueArgs.boxEdgeColors) == groupSize
+    NameValueArgs.boxEdgeColors = repmat(NameValueArgs.boxEdgeColors, ...
+                                         [1,nGroups]);
+end
+
+% Set default whisker colors (black) if none are specified, or replicate
+% single or group-level color specification
+if isempty(NameValueArgs.whiskerColors)
+    NameValueArgs.whiskerColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
+elseif numel(NameValueArgs.whiskerColors) == 1
+    NameValueArgs.whiskerColors = repmat(NameValueArgs.whiskerColors, ...
+                                         [1,nBoxes]);
+elseif numel(NameValueArgs.whiskerColors) == groupSize
+    NameValueArgs.whiskerColors = repmat(NameValueArgs.whiskerColors, ...
+                                         [1,nGroups]);
+end
+
+% Set default median colors (black) if none are specified, or replicate
+% single or group-level color specification
+if isempty(NameValueArgs.medianColors)
+    NameValueArgs.medianColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
+elseif numel(NameValueArgs.medianColors) == 1
+    NameValueArgs.medianColors = repmat(NameValueArgs.medianColors, ...
+                                        [1,nBoxes]);
+elseif numel(NameValueArgs.medianColors) == groupSize
+    NameValueArgs.medianColors = repmat(NameValueArgs.medianColors, ...
+                                        [1,nGroups]);
+end
+
+% Set default outlier colors (matched to box colors) if none are specified,
+% or replicate single or group-level color specification
+if isempty(NameValueArgs.outlierColors)
+    NameValueArgs.outlierColors = NameValueArgs.boxColors;
+elseif numel(NameValueArgs.outlierColors) == 1
+    NameValueArgs.outlierColors = repmat(NameValueArgs.outlierColors, ...
+                                         [1,nBoxes]);
+elseif numel(NameValueArgs.outlierColors) == groupSize
+    NameValueArgs.outlierColors = repmat(NameValueArgs.outlierColors, ...
+                                         [1,nGroups]);
+end
+
+% Set default point colors (black) if not specified ...
+%
+if isempty(NameValueArgs.pointColors)
+    NameValueArgs.pointColors = repmat({[0.0,0.0,0.0]},[nSamples,nBoxes]);
+elseif numel(NameValueArgs.pointColors) == 1
+    NameValueArgs.pointColors = repmat(NameValueArgs.pointColors, ...
+                                       [nSamples,nBoxes]);
+elseif isvector(NameValueArgs.pointColors) && ...
+       any(size(NameValueArgs.pointColors) == groupSize)
+    NameValueArgs.pointColors = repmat(NameValueArgs.pointColors, ...
+                                       [nSamples,nGroups]);
+elseif isvector(NameValueArgs.pointColors) && ...
+       any(size(NameValueArgs.pointColors) == nBoxes)
+    NameValueArgs.pointColors = repmat(NameValueArgs.pointColors, ...
+                                       [nSamples,1]);
+elseif all(ismember(size(NameValueArgs.pointColors), ...
+                    [nSamples - nMissing,groupSize])) %%%%
+    NameValueArgs.pointColors = repmat(NameValueArgs.pointColors, ...
+                                       [1,nGroups]);
+% need condition for pointColors matching nSamples
+end
+
+% Check default color stream specification for point colors
+point_defaultIdx = cell2mat(cellfun(@(x) strcmp(x,'default'), ...
+                                    NameValueArgs.pointColors, ...
+                                    'UniformOutput',false));
 if any(point_defaultIdx,'all')
-    
-    defaultColors = repmat(num2cell(colororder,2),[ceil(size(pointColors,1)/7),size(pointColors,2)]);
-
-    defaultColors = defaultColors(1:size(pointColors,1),:);
-
-    pointColors(point_defaultIdx) = defaultColors(point_defaultIdx);
-
+    defaultColors = repmat(num2cell(colororder,2), ...
+                           [ceil(size(NameValueArgs.pointColors,1)/7), ...
+                            size(NameValueArgs.pointColors,2)]);
+    defaultColors = defaultColors(1:size(NameValueArgs.pointColors,1),:);
+    NameValueArgs.pointColors(point_defaultIdx) = defaultColors(point_defaultIdx);
 end
 
+% Set default line colors (black) if not specified ...
+%
 nLines = nGroups*(groupSize - 1);
-
-if isempty(lineColors), lineColors = repmat({[0,0,0]},[nSamples,nLines]);
-
-elseif numel(lineColors) == 1, lineColors = repmat(lineColors,[nSamples,nLines]);
-
-elseif isvector(lineColors) && any(size(lineColors) == nGroups), lineColors = lineColors(kron(1:nGroups,ones(nSamples,groupSize-1)));
-
-elseif isvector(lineColors) && any(size(lineColors) == nLines), lineColors = repmat(lineColors,[nSamples,1]);
-
-elseif all(ismember(size(lineColors),[nSamples - nMissing,nGroups])), lineColors = lineColors(:,kron(1:nGroups,ones(1,groupSize-1)));
-
+if isempty(NameValueArgs.lineColors)
+    NameValueArgs.lineColors = repmat({[0.0,0.0,0.0]},[nSamples,nLines]);
+elseif numel(NameValueArgs.lineColors) == 1
+    NameValueArgs.lineColors = repmat(NameValueArgs.lineColors, ...
+                                      [nSamples,nLines]);
+elseif isvector(NameValueArgs.lineColors) && ...
+       any(size(NameValueArgs.lineColors) == nGroups)
+    NameValueArgs.lineColors = NameValueArgs.lineColors(kron(1:nGroups,ones(nSamples,groupSize-1))); %%%% stylize from here
+elseif isvector(NameValueArgs.lineColors) && ...
+       any(size(NameValueArgs.lineColors) == nLines)
+    NameValueArgs.lineColors = repmat(NameValueArgs.lineColors,[nSamples,1]);
+elseif all(ismember(size(NameValueArgs.lineColors),[nSamples - nMissing,nGroups])) %%%%
+    NameValueArgs.lineColors = NameValueArgs.lineColors(:,kron(1:nGroups,ones(1,groupSize-1)));
+% need condition for lineColors matching nSamples
 end
 
-line_defaultIdx = cell2mat(cellfun(@(x)strcmp(x,'default'),lineColors,'UniformOutput',false));
-
+% Check default color stream specification for line colors
+line_defaultIdx = cell2mat(cellfun(@(x) strcmp(x,'default'),lineColors,'UniformOutput',false));
 if any(line_defaultIdx,'all')
-    
     defaultColors = repmat(num2cell(colororder,2),[ceil(size(lineColors,1)/7),size(lineColors,2)]); 
-    
     defaultColors = defaultColors(1:size(lineColors,1),:);
-
     lineColors(line_defaultIdx) = defaultColors(line_defaultIdx);
-
 end
 
-%%%% check boxLabels against nGroups to warn user about specifying labelGroups
-
-if labelGroups == true && numel(boxLabels) > nGroups
-
-    error('Too many boxLabels for number of groups, did you mean to specify labelGroups = true?');
-
-elseif labelGroups == true && numel(boxLabels) < nGroups
-
-    error('Too few boxLabels for number of groups, did you mean to specify labelGroups = true?');
-
+% Check boxLabels against nGroups to warn user about specifying labelGroups
+if NameValueArgs.labelGroups == true && ...
+   numel(boxLabels) > nGroups
+    error('Number of box labels exceeds number of groups, did you mean to specify labelGroups = false?');
+elseif NameValueArgs.labelGroups == true && ...
+       numel(boxLabels) < nGroups
+    error('Insufficient number of box labels for number of groups.');
+elseif NameValueArgs.labelGroups == false && ...
+       NameValueArgs.groupSize ~= 1 && ...
+       numel(boxLabels) == nGroups && ...
+       numel(boxColors) == NameValueArgs.groupSize %%%% why?
+    error('Insufficient number of box labels for number of groups, did you mean to specify labelGroups = true?');
 end
 
-%%%% check whether labels match nGroups if labelGroups = false
-
-if groupSize ~= 1 && ...
-   numel(boxLabels) == nGroups && ...
-   numel(boxColors) == groupSize && ...
-   labelGroups == false
-    
-    error('Insufficient number of boxLabels, did you mean to specify labelGroups = true?');
-
-end
-
-%%%% get x-coordinates for plotting
-
+% Generate x-coordinates for plotting boxes
 if nGroups == 1
-    
-    xCoordinates = [0.70:0.65:0.7 + (0.65*nBoxes) - 0.65].*boxSpacing;
-   
+    xCoordinates = (0.70 : 0.65 : 0.70 + (0.65*nBoxes) - 0.65).*boxSpacing;
 else
-
-    xCoordinates = [0.70:0.55:0.70 + (0.55*(nBoxes/nGroups) - 0.55)]; initCoors = [0.70:0.55:0.70 + (0.55*(nBoxes/nGroups) - 0.55)];
-
-    for grp = 2:nGroups, xCoordinates = horzcat(xCoordinates,initCoors + (xCoordinates(end) + 0.4)); end
-
+    xCoordinates = 0.70 : 0.55 : 0.70 + (0.55*(nBoxes/nGroups) - 0.55); 
+    initCoors = 0.70 : 0.55 : 0.70 + (0.55*(nBoxes/nGroups) - 0.55);
+    for grp = 2:nGroups
+        xCoordinates = horzcat(xCoordinates,initCoors + (xCoordinates(end) + 0.4)); %%%%
+    end
     xCoordinates = xCoordinates.*boxSpacing;
-
 end
 
-%%%% get matrix of jitter if specified
-
+% Generate matrix of jitter if specified
 if strcmp(outlierJitter,'density') || strcmp(pointJitter,'density') %%%% add this
 
     kernelDensity = ksdensity(currData);
