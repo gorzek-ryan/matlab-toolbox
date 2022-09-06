@@ -24,11 +24,11 @@ function [xCoordinates,lgdObject] = boxPlot(inputData,NameValueArgs)
 %
 %     boxColors ([0.7,0.7,0.7]) -- cell array of RGB vectors that specify box colors.
 %
-%     boxEdgeColors ([0,0,0]) -- 
+%     boxEdgeColors ([0.0,0.0,0.0]) -- 
 %
 %     boxLineWidth (1) -- scalar that specifies the line width of the box edges and whiskers.
 %
-%     whiskerColors ([0,0,0]) -- 
+%     whiskerColors ([0.0,0.0,0.0]) -- 
 %
 %     outlierSize (30) -- scalar that specifies the size of outlier points.
 %
@@ -36,13 +36,13 @@ function [xCoordinates,lgdObject] = boxPlot(inputData,NameValueArgs)
 %
 %     pointSize (10) -- 
 %
-%     pointColor ([0,0,0]) -- 
+%     pointColor ([0.0,0.0,0.0]) -- 
 %
 %     connectGroups (false) -- 
 %
-%     connectLineWidth ([0,0,0]) -- 
+%     connectLineWidth () -- 
 %
-%     connectLineColor ([0,0,0]) -- 
+%     connectLineColor ([0.0,0.0,0.0]) -- 
 %
 %     plotLegend (false) -- logical that specifies whether or not to plot a legend with the specified parameters.
 %
@@ -77,7 +77,7 @@ arguments
     
     inputData (:,:) {mustBeNumeric} % 
     
-    NameValueArgs.inputLabels {mustBeVector,mustBeNumeric} = reshape(repmat(1:size(inputData,2),[size(inputData,1),1]),[],1) % 
+    NameValueArgs.inputLabels {mustBeVector, mustBeNumeric} = reshape(repmat(1:size(inputData,2),[size(inputData,1),1]),[],1) % 
 
     NameValueArgs.groupSize (1,1) {mustBeNumeric} = 1 % 
     NameValueArgs.labelGroups (1,1) logical = false % 
@@ -297,90 +297,72 @@ else
     xCoordinates = 0.70 : 0.55 : 0.70 + (0.55*(nBoxes/nGroups) - 0.55); 
     initCoors = 0.70 : 0.55 : 0.70 + (0.55*(nBoxes/nGroups) - 0.55);
     for grp = 2:nGroups
-        xCoordinates = horzcat(xCoordinates,initCoors + (xCoordinates(end) + 0.4)); %%%%
+        xCoordinates = horzcat(xCoordinates, initCoors + xCoordinates(end) + 0.4); %%%%
     end
     xCoordinates = xCoordinates.*boxSpacing;
 end
 
-%%%% stylize from here
-
 % Generate matrix of jitter if specified
-if strcmp(outlierJitter,'density') || strcmp(pointJitter,'density') %%%% add this
-
-    kernelDensity = ksdensity(currData);
-
-elseif strcmp(outlierJitter,'rand') || strcmp(pointJitter,'rand')
-
-    jitterMat = rand(size(reshape(inputData,[],nBoxes))).*(boxWidth*0.75); jitterMat = jitterMat - mean(jitterMat,1);
-
-elseif strcmp(outlierJitter,'randn') || strcmp(pointJitter,'randn')
-
+if strcmp(outlierJitter,'density') || ...
+   strcmp(pointJitter,'density')
+    kernelDensity = ksdensity(currData); %%%% add this
+elseif strcmp(outlierJitter,'rand') || ...
+       strcmp(pointJitter,'rand')
+    jitterMat = rand(size(reshape(inputData,[],nBoxes))).*(boxWidth*0.75);
+    jitterMat = jitterMat - mean(jitterMat,1);
+elseif strcmp(outlierJitter,'randn') || ...
+       strcmp(pointJitter,'randn')
     randnMat = randn(size(reshape(inputData,[],nBoxes)));
-
-    jitterMat = (randnMat./max(randnMat,[],1)).*(boxWidth*0.75); jitterMat = jitterMat - mean(jitterMat,1);
-
-elseif strcmp(outlierJitter,'none') && strcmp(pointJitter,'none')
-
+    jitterMat = (randnMat./max(randnMat,[],1)).*(boxWidth*0.75);
+    jitterMat = jitterMat - mean(jitterMat,1);
+elseif strcmp(outlierJitter,'none') && ...
+       strcmp(pointJitter,'none')
     jitterMat = zeros(size(reshape(inputData,[],nBoxes)));
-
 end
 
-%%%% intialize matrices for storing max/min to set axes
+% Intialize matrices for storing max/min values to set axes limits
+maxMat = zeros(nBoxes,3); minMat = zeros(nBoxes,3);
 
-maxMat = zeros(nBoxes,3); % upperQuantile, upperWhisker, upperOutliers
-minMat = zeros(nBoxes,3); % lowerQuantile, lowerWhisker, lowerOutliers
-
-%%%% plot
-
+% Plot boxes
 for box = uniqueLabels
 
-    boxNum = find(uniqueLabels == box);
-    
     clear boxMedian lowerQuantile upperQuantile lowerWhisker upperWhisker lowerOutliers upperOutliers
 
-    %%%% get data for current box
-    
+    % Get current box location and data
+    boxNum = find(uniqueLabels == box);
     currData = inputData(inputLabels == box,1);
     
-    %%%% plot box if there are at least 4 data points
-    
+    % Plot box if there are at least 4 data points ...
     if nnz(~isnan(currData)) > 4
 
-        boxMedian = median(currData,1,'omitnan'); % get median
-        
-        upperQuantile = quantile(currData,0.75); % get 75 percentile
-        
-        lowerQuantile = quantile(currData,0.25); % get 25 percentile
+        boxMedian = median(currData,1,'omitnan');
 
-        % get upper whisker value
+        upperQuantile = quantile(currData,0.75);
+        lowerQuantile = quantile(currData,0.25);
 
         maxWhisker = upperQuantile + 1.5*(upperQuantile - lowerQuantile); 
-        
         upperWhisker = max(currData(currData < maxWhisker & currData >= upperQuantile));
-        
         if isempty(upperWhisker), upperWhisker = maxWhisker; end
 
-        % get lower whisker value
-
         minWhisker = lowerQuantile - 1.5*(upperQuantile - lowerQuantile);
-
         lowerWhisker = min(currData(currData > minWhisker & currData <= lowerQuantile));
-
         if isempty(lowerWhisker), lowerWhisker = minWhisker; end
         
         hold on;
 
-        % plot box with bounds at quartiles
-        rectangle('Position',[xCoordinates(boxNum) - 0.25,lowerQuantile,0.5,upperQuantile - lowerQuantile],...
-                  'FaceColor',[boxColors{boxNum},boxAlpha],...
-                  'EdgeColor',[boxEdgeColors{boxNum},boxEdgeAlpha],...
-                  'LineWidth',boxEdgeWidth,...
-                  'LineStyle',boxEdgeStyle,...
-                  'Curvature',boxCurvature,...
+        % Plot box with bounds at quartiles
+        rectangle('Position',[xCoordinates(boxNum)-0.25, lowerQuantile, 0.5, upperQuantile-lowerQuantile],...
+                  'FaceColor',[NameValueArgs.boxColors{boxNum},NameValueArgs.boxAlpha],...
+                  'EdgeColor',[NameValueArgs.boxEdgeColors{boxNum},NameValueArgs.boxEdgeAlpha],...
+                  'LineWidth',NameValueArgs.boxEdgeWidth,...
+                  'LineStyle',NameValueArgs.boxEdgeStyle,...
+                  'Curvature',NameValueArgs.boxCurvature,...
                   'Tag','Box');
+
+        %%%% stylize from here %%%%
         
         % plot median line
-        line([xCoordinates(boxNum) - 0.25,xCoordinates(boxNum) + 0.25],...
+        line([xCoordinates(boxNum) - 0.25, xCoordinates(boxNum) + 0.25],...
              [boxMedian,boxMedian],...
              'Color',[medianColors{boxNum},medianAlpha],...
              'LineWidth',medianWidth,...
@@ -419,13 +401,8 @@ for box = uniqueLabels
              'LineStyle',whiskerStyle,...
              'Tag','Upper Whisker Bar');
 
-        %%%% plot outliers
-        
-        % upper
-
+        % Plot upper outliers
         if any(currData > upperWhisker)
-            
-            % scatter outliers
             scatter(xCoordinates(boxNum) - jitterMat(currData > upperWhisker,boxNum),...
                     currData(currData > upperWhisker),...
                     outlierSize,...
@@ -435,20 +412,13 @@ for box = uniqueLabels
                     'MarkerFaceAlpha',outlierAlpha,...
                     'MarkerEdgeAlpha',outlierAlpha,...
                     'Tag','Outlier');
-
             upperOutliers = currData(currData > upperWhisker);
-            
         else
-            
             upperOutliers = nan;
-            
         end
         
-        % lower
-
+        % Plot lower outliers
         if any(currData < lowerWhisker)
-            
-            % scatter outliers
             scatter(xCoordinates(boxNum) - jitterMat(currData < lowerWhisker,boxNum),...
                     currData(currData < lowerWhisker),...
                     outlierSize,...
@@ -458,13 +428,9 @@ for box = uniqueLabels
                     'MarkerFaceAlpha',outlierAlpha,...
                     'MarkerEdgeAlpha',outlierAlpha,...
                     'Tag','Outlier');
-
             lowerOutliers = currData(currData < lowerWhisker);
-            
         else
-            
             lowerOutliers = nan;
-            
         end
 
         %%%% store min/max from each box for setting axis limits
