@@ -417,6 +417,7 @@ for box = uniqueLabels
         
         % Plot lower outliers
         if any(currData < lowerWhisker)
+
             scatter(xCoordinates(boxNum) - jitterMat(currData < lowerWhisker,boxNum),...
                     currData(currData < lowerWhisker),...
                     outlierSize,...
@@ -426,6 +427,7 @@ for box = uniqueLabels
                     'MarkerFaceAlpha', NameValueArgs.outlierAlpha,...
                     'MarkerEdgeAlpha', NameValueArgs.outlierAlpha,...
                     'Tag',            'Outlier');
+
             lowerOutliers = currData(currData < lowerWhisker);
         else
             lowerOutliers = nan;
@@ -474,157 +476,152 @@ for box = uniqueLabels
     
 end
 
-%%%% Stylize from here
-
-%%%% connect groups with lines
-
+% Connect groups with lines if specified
 if (isnumeric(plotLines) || plotLines == true) && nGroups == nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(plotLines), lineIdx = plotLines; else, lineIdx = 1:nBoxes; end
+    if isnumeric(plotLines)
+        lineIdx = plotLines; 
+    else
+        lineIdx = 1:nBoxes; 
+    end
 
-    for connection = 1:numel(lineIdx) - 1
-
+    for connection = 1:numel(lineIdx)-1
         for sample = find(~all(isnan(currData),2))'
 
-            plot(xCoordinates(lineIdx(connection:connection + 1)) - jitterMat(sample,lineIdx(connection:connection + 1)),...
-                 currData(sample,lineIdx(connection:connection + 1)),...
-                 'Color',[lineColors{find(~all(isnan(currData),2)) == sample,connection},lineAlpha],...
-                 'LineWidth',lineWidth,...
-                 'LineStyle',lineStyle,...
-                 'Tag','Line');
-        
-        end
+            plot(xCoordinates(lineIdx(connection:connection+1)) - jitterMat(sample,lineIdx(connection:connection+1)),...
+                 currData(sample,lineIdx(connection:connection+1)),...
+                 'Color',    [NameValueArgs.lineColors{find(~all(isnan(currData),2)) == sample,connection}, NameValueArgs.lineAlpha],...
+                 'LineWidth', NameValueArgs.lineWidth,...
+                 'LineStyle', NameValueArgs.lineStyle,...
+                 'Tag',      'Line');
 
+        end
     end
 
 elseif (isnumeric(plotLines) || plotLines == true) && nGroups ~= nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(plotLines), lineIdx = plotLines; else, lineIdx = 1:nBoxes/nGroups; end
+    if isnumeric(plotLines)
+        lineIdx = plotLines;
+    else
+        lineIdx = 1:nBoxes/nGroups;
+    end
 
     connectionNum = 1;
-
     for group = 1:nGroups
 
-        boxIdx = reshape(1:nBoxes,[],nGroups)'; boxIdx = boxIdx(:,lineIdx);
+        boxIdx = reshape(1:nBoxes,[],nGroups)'; 
+        boxIdx = boxIdx(:,lineIdx);
 
-        for connection = 1:numel(boxIdx(group,:)) - 1
-
+        for connection = 1:numel(boxIdx(group,:))-1
             for sample = find(~all(isnan(currData),2))'
 
                 plot(xCoordinates(boxIdx(group,connection:connection + 1)) - jitterMat(sample,boxIdx(group,connection:connection + 1)),...
                      currData(sample,boxIdx(group,connection:connection + 1)),...
-                     'Color',[lineColors{find(~all(isnan(currData),2)) == sample,connectionNum},lineAlpha],...
-                     'LineWidth',lineWidth,...
-                     'LineStyle',lineStyle,...
-                     'Tag','Line');
+                     'Color',    [NameValueArgs.lineColors{find(~all(isnan(currData),2)) == sample,connectionNum}, NameValueArgs.lineAlpha],...
+                     'LineWidth', NameValueArgs.lineWidth,...
+                     'LineStyle', NameValueArgs.lineStyle,...
+                     'Tag',      'Line');
             
             end
-
             connectionNum = connectionNum + 1;
-
         end
 
     end
 
 end
 
-%%%% plot individual data points
-
+% Plot individual data points if specified
 if (isnumeric(plotPoints) || plotPoints == true) && nGroups == nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(plotPoints), pointIdx = plotPoints; else, pointIdx = 1:nBoxes; end
+    if isnumeric(plotPoints)
+        pointIdx = plotPoints;
+    else
+        pointIdx = 1:nBoxes;
+    end
 
     for box = pointIdx
-
         for sample = find(~all(isnan(currData),2))'
 
             scatter(xCoordinates(box) - jitterMat(sample,box),...
                     currData(sample,box),...
                     pointSize,...
-                    'MarkerFaceColor',pointColors{find(~all(isnan(currData),2)) == sample,box},...
-                    'MarkerEdgeColor',pointColors{find(~all(isnan(currData),2)) == sample,box},...
-                    'Marker',pointStyle,...
-                    'MarkerFaceAlpha',pointAlpha,...
-                    'MarkerEdgeAlpha',pointAlpha,...
-                    'Tag','Point');
+                    'MarkerFaceColor', NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,box},...
+                    'MarkerEdgeColor', NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,box},...
+                    'Marker',          NameValueArgs.pointStyle,...
+                    'MarkerFaceAlpha', NameValueArgs.pointAlpha,...
+                    'MarkerEdgeAlpha', NameValueArgs.pointAlpha,...
+                    'Tag',            'Point');
 
         end
-
     end
 
 elseif (isnumeric(plotPoints) || plotPoints == true) && nGroups ~= nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(plotPoints), pointIdx = plotPoints; else, pointIdx = 1:nBoxes/nGroups; end
+    if isnumeric(plotPoints)
+        pointIdx = plotPoints;
+    else
+        pointIdx = 1:nBoxes/nGroups;
+    end
 
     boxIdx = reshape(1:nBoxes,[],nGroups)'; boxIdx = boxIdx(:,pointIdx); 
     
     boxNum = 1;
-    
     for group = 1:nGroups
-
         for box = 1:size(boxIdx,2)
-
             for sample = find(~all(isnan(currData),2))'
 
                 scatter(xCoordinates(boxIdx(group,box)) - jitterMat(sample,boxIdx(group,box)),...
                         currData(sample,boxIdx(group,box)),...
                         pointSize,...
-                        'MarkerFaceColor',pointColors{find(~all(isnan(currData),2)) == sample,boxNum},...
-                        'MarkerEdgeColor',pointColors{find(~all(isnan(currData),2)) == sample,boxNum},...
-                        'Marker',pointStyle,...
-                        'MarkerFaceAlpha',pointAlpha,...
-                        'MarkerEdgeAlpha',pointAlpha,...
-                        'Tag','Point');
+                        'MarkerFaceColor', NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,boxNum},...
+                        'MarkerEdgeColor', NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,boxNum},...
+                        'Marker',          NameValueArgs.pointStyle,...
+                        'MarkerFaceAlpha', NameValueArgs.pointAlpha,...
+                        'MarkerEdgeAlpha', NameValueArgs.pointAlpha,...
+                        'Tag',            'Point');
 
             end
-
             boxNum = boxNum + 1;
-        
         end
-
     end
 
 end
 
-%%%% set x-axis limits
+% Set x-axis limits
+xlim([0.2*boxSpacing, xCoordinates(end)+(0.5*boxSpacing)]);
 
-xlim([0.2*boxSpacing,xCoordinates(end) + (0.5*boxSpacing)]);
-
-%%%% set x-axis tick labels
-
+% Set x-axis tick labels
 xLabPos = [];
-
-if labelGroups == true
-
-    for group = 1:(nBoxes/nGroups):nBoxes, xLabPos = horzcat(xLabPos,median(xCoordinates(group:group + (nBoxes/nGroups) - 1))); end
-
-    set(gca,'xtick',xLabPos); set(gca,'xticklabel',boxLabels);
-
-else
-        
-    set(gca,'xtick',xCoordinates); set(gca,'xticklabel',boxLabels);
-
+if NameValueArgs.labelGroups == true
+    for group = 1:(nBoxes/nGroups):nBoxes
+        xLabPos = horzcat(xLabPos, median(xCoordinates(group : group+(nBoxes/nGroups)-1)));
+    end
+    set(gca,'xtick',      xLabPos,...
+            'xticklabel', NameValueArgs.boxLabels);
+else 
+    set(gca,'xtick',      xCoordinates,...
+            'xticklabel', NameValueArgs.boxLabels);
 end
 
-%%%% set figure & axes appearance
+% Set figure & axes appearance
+set(gcf,'color',     'w');
+set(gca,'box',       'off',...
+        'XColor',    'k',...
+        'YColor',    'k',...
+        'TickDir',   'out',...
+        'TickLength', [0.01,0.01],...
+        'FontSize',   13,...
+        'LineWidth',  1);
 
-set(gcf,'color','w');
-
-set(gca,'box','off',...
-        'XColor','k',...
-        'YColor','k',...
-        'TickDir','out',...
-        'TickLength',[0.01,0.01],...
-        'FontSize',13,...
-        'LineWidth',1);
+%%%% Stylize from here
 
 %%%% set y-axis limits
 
