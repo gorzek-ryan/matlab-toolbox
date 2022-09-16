@@ -252,7 +252,7 @@ end
 
 % Set default line colors (black) if not specified ...
 %
-nLines = nGroups*(groupSize - 1);
+nLines = nGroups*(NameValueArgs.groupSize - 1);
 if isempty(NameValueArgs.lineColors)
     NameValueArgs.lineColors = repmat({[0.0,0.0,0.0]},[nSamples,nLines]);
 elseif numel(NameValueArgs.lineColors) == 1
@@ -299,30 +299,30 @@ else
     for grp = 2:nGroups
         xCoordinates = horzcat(xCoordinates, initCoors + xCoordinates(end) + 0.4); %%%%
     end
-    xCoordinates = xCoordinates.*boxSpacing;
+    xCoordinates = xCoordinates.*NameValueArgs.boxSpacing;
 end
 
 % Generate matrix of jitter if specified
-if strcmp(outlierJitter,'density') || ...
-   strcmp(pointJitter,'density')
+if strcmp(NameValueArgs.outlierJitter,'density') || ...
+   strcmp(NameValueArgs.pointJitter,'density')
 
     kernelDensity = ksdensity(currData); %%%% add this
 
-elseif strcmp(outlierJitter,'rand') || ...
-       strcmp(pointJitter,'rand')
+elseif strcmp(NameValueArgs.outlierJitter,'rand') || ...
+       strcmp(NameValueArgs.pointJitter,'rand')
 
     jitterMat = rand(size(reshape(inputData,[],nBoxes))).*(boxWidth*0.75);
     jitterMat = jitterMat - mean(jitterMat,1);
 
-elseif strcmp(outlierJitter,'randn') || ...
-       strcmp(pointJitter,'randn')
+elseif strcmp(NameValueArgs.outlierJitter,'randn') || ...
+       strcmp(NameValueArgs.pointJitter,'randn')
 
     randnMat = randn(size(reshape(inputData,[],nBoxes)));
     jitterMat = (randnMat./max(randnMat,[],1)).*(boxWidth*0.75);
     jitterMat = jitterMat - mean(jitterMat,1);
 
-elseif strcmp(outlierJitter,'none') && ...
-       strcmp(pointJitter,'none')
+elseif strcmp(NameValueArgs.outlierJitter,'none') && ...
+       strcmp(NameValueArgs.pointJitter,'none')
 
     jitterMat = zeros(size(reshape(inputData,[],nBoxes)));
 
@@ -338,12 +338,12 @@ for box = uniqueLabels
 
     % Get current box location and data
     boxNum = find(uniqueLabels == box);
-    currData = inputData(inputLabels == box,1);
+    currData = inputData(NameValueArgs.inputLabels == box,1);
     
     % Plot box if there are at least 4 data points ...
     if nnz(~isnan(currData)) > 4
 
-        boxMedian = median(currData, 1, 'omitnan');
+        boxMedian = median(currData,1,'omitnan');
 
         upperQuantile = quantile(currData, 0.75);
         lowerQuantile = quantile(currData, 0.25);
@@ -411,7 +411,7 @@ for box = uniqueLabels
         if any(currData > upperWhisker)
             scatter(xCoordinates(boxNum) - jitterMat(currData > upperWhisker,boxNum),...
                     currData(currData > upperWhisker),...
-                    outlierSize,...
+                    NameValueArgs.outlierSize,...
                     'MarkerFaceColor', NameValueArgs.outlierColors{boxNum},...
                     'MarkerEdgeColor', NameValueArgs.outlierColors{boxNum},...
                     'Marker',          NameValueArgs.outlierStyle,...
@@ -428,7 +428,7 @@ for box = uniqueLabels
 
             scatter(xCoordinates(boxNum) - jitterMat(currData < lowerWhisker,boxNum),...
                     currData(currData < lowerWhisker),...
-                    outlierSize,...
+                    NameValueArgs.outlierSize,...
                     'MarkerFaceColor', NameValueArgs.outlierColors{boxNum},...
                     'MarkerEdgeColor', NameValueArgs.outlierColors{boxNum},...
                     'Marker',          NameValueArgs.outlierStyle,...
@@ -485,13 +485,13 @@ for box = uniqueLabels
 end
 
 % Connect groups with lines if specified
-if (isnumeric(plotLines) || plotLines == true) && ...
+if (isnumeric(NameValueArgs.plotLines) || NameValueArgs.plotLines == true) && ...
    nGroups == nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(plotLines)
-        lineIdx = plotLines; 
+    if isnumeric(NameValueArgs.plotLines)
+        lineIdx = NameValueArgs.plotLines; 
     else
         lineIdx = 1:nBoxes; 
     end
@@ -509,13 +509,13 @@ if (isnumeric(plotLines) || plotLines == true) && ...
         end
     end
 
-elseif (isnumeric(plotLines) || plotLines == true) && ...
+elseif (isnumeric(NameValueArgs.plotLines) || NameValueArgs.plotLines == true) && ...
        nGroups ~= nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(plotLines)
-        lineIdx = plotLines;
+    if isnumeric(NameValueArgs.plotLines)
+        lineIdx = NameValueArgs.plotLines;
     else
         lineIdx = 1:nBoxes/nGroups;
     end
@@ -545,12 +545,13 @@ elseif (isnumeric(plotLines) || plotLines == true) && ...
 end
 
 % Plot individual data points if specified
-if (isnumeric(plotPoints) || plotPoints == true) && nGroups == nBoxes
+if (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true) && ...
+   nGroups == nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(plotPoints)
-        pointIdx = plotPoints;
+    if isnumeric(NameValueArgs.plotPoints)
+        pointIdx = NameValueArgs.plotPoints;
     else
         pointIdx = 1:nBoxes;
     end
@@ -571,12 +572,13 @@ if (isnumeric(plotPoints) || plotPoints == true) && nGroups == nBoxes
         end
     end
 
-elseif (isnumeric(plotPoints) || plotPoints == true) && nGroups ~= nBoxes
+elseif (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true) && ...
+       nGroups ~= nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(plotPoints)
-        pointIdx = plotPoints;
+    if isnumeric(NameValueArgs.plotPoints)
+        pointIdx = NameValueArgs.plotPoints;
     else
         pointIdx = 1:nBoxes/nGroups;
     end
@@ -606,7 +608,7 @@ elseif (isnumeric(plotPoints) || plotPoints == true) && nGroups ~= nBoxes
 end
 
 % Set x-axis limits
-xlim([0.2*boxSpacing, xCoordinates(end)+(0.5*boxSpacing)]);
+xlim([0.2*NameValueArgs.boxSpacing, xCoordinates(end)+(0.5*NameValueArgs.boxSpacing)]);
 
 % Set x-axis tick labels
 xLabPos = [];
