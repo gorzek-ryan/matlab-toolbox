@@ -305,19 +305,27 @@ end
 % Generate matrix of jitter if specified
 if strcmp(outlierJitter,'density') || ...
    strcmp(pointJitter,'density')
+
     kernelDensity = ksdensity(currData); %%%% add this
+
 elseif strcmp(outlierJitter,'rand') || ...
        strcmp(pointJitter,'rand')
+
     jitterMat = rand(size(reshape(inputData,[],nBoxes))).*(boxWidth*0.75);
     jitterMat = jitterMat - mean(jitterMat,1);
+
 elseif strcmp(outlierJitter,'randn') || ...
        strcmp(pointJitter,'randn')
+
     randnMat = randn(size(reshape(inputData,[],nBoxes)));
     jitterMat = (randnMat./max(randnMat,[],1)).*(boxWidth*0.75);
     jitterMat = jitterMat - mean(jitterMat,1);
+
 elseif strcmp(outlierJitter,'none') && ...
        strcmp(pointJitter,'none')
+
     jitterMat = zeros(size(reshape(inputData,[],nBoxes)));
+
 end
 
 % Intialize matrices for storing max/min values to set axes limits
@@ -440,12 +448,12 @@ for box = uniqueLabels
     elseif nnz(~isnan(currData)) == 0
         
         % Store min/max from each box to set axis limits
-        maxMat(boxNum,:) = [repmat(max(currData), [1,3])];
-        minMat(boxNum,:) = [repmat(min(currData), [1,3])];
+        maxMat(boxNum,:) = [repmat(max(currData),[1,3])];
+        minMat(boxNum,:) = [repmat(min(currData),[1,3])];
     
     elseif nnz(~isnan(currData)) <= 4
 
-        boxMedian = median(currData, 1, 'omitnan'); % get median
+        boxMedian = median(currData,1,'omitnan');
         
         hold on;
 
@@ -477,7 +485,8 @@ for box = uniqueLabels
 end
 
 % Connect groups with lines if specified
-if (isnumeric(plotLines) || plotLines == true) && nGroups == nBoxes
+if (isnumeric(plotLines) || plotLines == true) && ...
+   nGroups == nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
@@ -500,7 +509,8 @@ if (isnumeric(plotLines) || plotLines == true) && nGroups == nBoxes
         end
     end
 
-elseif (isnumeric(plotLines) || plotLines == true) && nGroups ~= nBoxes
+elseif (isnumeric(plotLines) || plotLines == true) && ...
+       nGroups ~= nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
@@ -612,52 +622,49 @@ else
 end
 
 % Set figure & axes appearance
-set(gcf,'color',     'w');
-set(gca,'box',       'off',...
-        'XColor',    'k',...
-        'YColor',    'k',...
-        'TickDir',   'out',...
+set(gcf,'color',      'w');
+set(gca,'box',        'off',...
+        'XColor',     'k',...
+        'YColor',     'k',...
+        'TickDir',    'out',...
         'TickLength', [0.01,0.01],...
-        'FontSize',   13,...
-        'LineWidth',  1);
+        'FontSize',    13,...
+        'LineWidth',   1);
 
-%%%% Stylize from here
-
-%%%% set y-axis limits
-
+% Set y-axis limits
 if ~all(isnan(maxMat),'all')
-
     yUpper = max(maxMat,[],'all'); yLower = min(minMat,[],'all');
-    
     yExt = (yUpper - yLower)*0.2;
-    
-    ylim([yLower - yExt,yUpper + yExt]);
-
+    ylim([yLower-yExt, yUpper+yExt]);
 end
 
-%%%% add legend if specified
+% Plot legend if specified
+if NameValueArgs.plotLegend == true && ...
+   ~isempty(NameValueArgs.lgdLabels) && ...
+   ~isempty(NameValueArgs.lgdColors)
 
-if plotLegend == true && ~isempty(lgdLabels) && ~isempty(lgdColors)
+    if NameValueArgs.lgdFontSize > 2
+        NameValueArgs.lgdLineHeight = (NameValueArgs.lgdFontSize-2) * NameValueArgs.lgdLineHeight;
+    end
 
-    if lgdFontSize > 2, lgdLineHeight = (lgdFontSize - 2)*lgdLineHeight; end
+    for lgdEntry = 1:numel(NameValueArgs.lgdColors)
 
-    for lgdEntry = 1:numel(lgdColors)
+        currData = inputData(inputLabels == lgdEntry,1);
+        med = median(currData,1,'omitnan');
 
-        currData = inputData(inputLabels == lgdEntry,1); med = median(currData,1,'omitnan');
-
-        % plot line with box color for legend
-        line([xCoordinates(lgdEntry)-0.25 xCoordinates(lgdEntry)+0.25],...
-             [med med],...
-             'Color',lgdColors{lgdEntry},...
-             'LineWidth',lgdLineHeight,...
-             'Tag','Legend Line');
+        % Plot line with box color for legend
+        line([xCoordinates(lgdEntry)-0.25, xCoordinates(lgdEntry)+0.25],...
+             [med, med],...
+             'Color',     NameValueArgs.lgdColors{lgdEntry},...
+             'LineWidth', NameValueArgs.lgdLineHeight,...
+             'Tag',      'Legend Line');
     
-        % plot while line over line with box color for legend
-        line([xCoordinates(lgdEntry)-0.25 xCoordinates(lgdEntry)+0.25],...
-             [med med],...
-             'Color',[1,1,1],...
-             'LineWidth',lgdLineHeight,...
-             'Tag','Legend Line Cover');
+        % Plot white line over line with box color for legend
+        line([xCoordinates(lgdEntry)-0.25, xCoordinates(lgdEntry)+0.25],...
+             [med, med],...
+             'Color',    [1.0,1.0,1.0],...
+             'LineWidth', NameValueArgs.lgdLineHeight,...
+             'Tag',      'Legend Line Cover');
 
         set(gca,'Children',circshift(gca().Children,-2,1));
 
@@ -666,16 +673,18 @@ if plotLegend == true && ~isempty(lgdLabels) && ~isempty(lgdColors)
     warning('off','MATLAB:handle_graphics:exceptions:SceneNode');
 
     lgdObject = legend(findobj(gca,'Tag','Legend Line'),...
-                       strcat('\fontsize{',num2str(lgdFontSize),'}',lgdLabels),...
-                       AutoUpdate = 'off',...
-                       NumColumns = lgdColumns,...
-                       Orientation = lgdOrientation,...
-                       Box = lgdBox,...
-                       Location = lgdLocation);
+                       strcat('\fontsize{',num2str(NameValueArgs.lgdFontSize),'}',NameValueArgs.lgdLabels),...
+                       'AutoUpdate', 'off',...
+                       'NumColumns',  NameValueArgs.lgdColumns,...
+                       'Orientation', NameValueArgs.lgdOrientation,...
+                       'Box',         NameValueArgs.lgdBox,...
+                       'Location',    NameValueArgs.lgdLocation);
 
-    lgdObject.ItemTokenSize = [30*lgdLineWidth,9];
+    lgdObject.ItemTokenSize = [30*NameValueArgs.lgdLineWidth,9];
 
-    if any(lgdPosition), lgdObject.Position = lgdPosition; end
+    if any(NameValueArgs.lgdPosition)
+        lgdObject.Position = NameValueArgs.lgdPosition;
+    end
 
 else
     
