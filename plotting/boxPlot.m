@@ -103,6 +103,8 @@ arguments
     NameValueArgs.whiskerStyle (1,1) string = '-' % 
     NameValueArgs.whiskerAlpha (1,1) {mustBeInRange(NameValueArgs.whiskerAlpha,0,1)} = 1
 
+    % differentiate whisker cap
+
     NameValueArgs.outlierColors (1,:) {mustBeA(NameValueArgs.outlierColors,'cell')} = {} % 
     NameValueArgs.outlierSize (1,1) {mustBeNumeric} = 30 % 
     NameValueArgs.outlierStyle (1,1) string = 'o' % 
@@ -111,10 +113,12 @@ arguments
 
     NameValueArgs.plotPoints {mustBeNumericOrLogical} = false
     NameValueArgs.pointColors {mustBeA(NameValueArgs.pointColors,'cell')} = {}
-    NameValueArgs.pointSize (1,1) {mustBeNumeric} = 20 % 
+    NameValueArgs.pointSize (1,1) {mustBeNumeric} = 20 %
     NameValueArgs.pointStyle (1,1) string = '.' % 
     NameValueArgs.pointAlpha (1,1) {mustBeInRange(NameValueArgs.pointAlpha,0,1)} = 1
     NameValueArgs.pointJitter {mustBeMember(NameValueArgs.pointJitter,['none','density','rand','randn'])} = 'none'
+
+    NameValueArgs.jitterBound (1,1) {mustBeNumeric} = 0.75
 
     NameValueArgs.plotLines {mustBeNumericOrLogical} = false
     NameValueArgs.lineColors {mustBeA(NameValueArgs.lineColors,'cell')} = {}
@@ -181,7 +185,7 @@ if isempty(NameValueArgs.boxColors)
     NameValueArgs.boxColors = repmat({[0.7,0.7,0.7]},[1,nBoxes]);
 elseif numel(NameValueArgs.boxColors) == 1
     NameValueArgs.boxColors = repmat(NameValueArgs.boxColors,[1,nBoxes]);
-elseif numel(NameValueArgs.boxColors) == groupSize
+elseif numel(NameValueArgs.boxColors) == NameValueArgs.groupSize
     NameValueArgs.boxColors = repmat(NameValueArgs.boxColors,[1,nGroups]);
 end
 
@@ -191,7 +195,7 @@ if isempty(NameValueArgs.boxEdgeColors)
     NameValueArgs.boxEdgeColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
 elseif numel(NameValueArgs.boxEdgeColors) == 1
     NameValueArgs.boxEdgeColors = repmat(NameValueArgs.boxEdgeColors,[1,nBoxes]);
-elseif numel(NameValueArgs.boxEdgeColors) == groupSize
+elseif numel(NameValueArgs.boxEdgeColors) == NameValueArgs.groupSize
     NameValueArgs.boxEdgeColors = repmat(NameValueArgs.boxEdgeColors,[1,nGroups]);
 end
 
@@ -201,7 +205,7 @@ if isempty(NameValueArgs.whiskerColors)
     NameValueArgs.whiskerColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
 elseif numel(NameValueArgs.whiskerColors) == 1
     NameValueArgs.whiskerColors = repmat(NameValueArgs.whiskerColors,[1,nBoxes]);
-elseif numel(NameValueArgs.whiskerColors) == groupSize
+elseif numel(NameValueArgs.whiskerColors) == NameValueArgs.groupSize
     NameValueArgs.whiskerColors = repmat(NameValueArgs.whiskerColors,[1,nGroups]);
 end
 
@@ -211,7 +215,7 @@ if isempty(NameValueArgs.medianColors)
     NameValueArgs.medianColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
 elseif numel(NameValueArgs.medianColors) == 1
     NameValueArgs.medianColors = repmat(NameValueArgs.medianColors,[1,nBoxes]);
-elseif numel(NameValueArgs.medianColors) == groupSize
+elseif numel(NameValueArgs.medianColors) == NameValueArgs.groupSize
     NameValueArgs.medianColors = repmat(NameValueArgs.medianColors,[1,nGroups]);
 end
 
@@ -221,7 +225,7 @@ if isempty(NameValueArgs.outlierColors)
     NameValueArgs.outlierColors = NameValueArgs.boxColors;
 elseif numel(NameValueArgs.outlierColors) == 1
     NameValueArgs.outlierColors = repmat(NameValueArgs.outlierColors,[1,nBoxes]);
-elseif numel(NameValueArgs.outlierColors) == groupSize
+elseif numel(NameValueArgs.outlierColors) == NameValueArgs.groupSize
     NameValueArgs.outlierColors = repmat(NameValueArgs.outlierColors,[1,nGroups]);
 end
 
@@ -232,12 +236,12 @@ if isempty(NameValueArgs.pointColors)
 elseif numel(NameValueArgs.pointColors) == 1
     NameValueArgs.pointColors = repmat(NameValueArgs.pointColors,[nSamples,nBoxes]);
 elseif isvector(NameValueArgs.pointColors) && ...
-       any(size(NameValueArgs.pointColors) == groupSize)
+       any(size(NameValueArgs.pointColors) == NameValueArgs.groupSize)
     NameValueArgs.pointColors = repmat(NameValueArgs.pointColors,[nSamples,nGroups]);
 elseif isvector(NameValueArgs.pointColors) && ...
        any(size(NameValueArgs.pointColors) == nBoxes)
     NameValueArgs.pointColors = repmat(NameValueArgs.pointColors,[nSamples,1]);
-elseif all(ismember(size(NameValueArgs.pointColors),[nSamples - nMissing,groupSize])) %%%%
+elseif all(ismember(size(NameValueArgs.pointColors),[nSamples - nMissing,NameValueArgs.groupSize])) %%%%
     NameValueArgs.pointColors = repmat(NameValueArgs.pointColors,[1,nGroups]);
 % need condition for pointColors matching nSamples
 end
@@ -311,14 +315,14 @@ if strcmp(NameValueArgs.outlierJitter,'density') || ...
 elseif strcmp(NameValueArgs.outlierJitter,'rand') || ...
        strcmp(NameValueArgs.pointJitter,'rand')
 
-    jitterMat = rand(size(reshape(inputData,[],nBoxes))).*(boxWidth*0.75);
+    jitterMat = rand(size(reshape(inputData,[],nBoxes))).*(0.5*NameValueArgs.jitterBound);
     jitterMat = jitterMat - mean(jitterMat,1);
 
 elseif strcmp(NameValueArgs.outlierJitter,'randn') || ...
        strcmp(NameValueArgs.pointJitter,'randn')
 
     randnMat = randn(size(reshape(inputData,[],nBoxes)));
-    jitterMat = (randnMat./max(randnMat,[],1)).*(boxWidth*0.75);
+    jitterMat = (randnMat./max(randnMat,[],1)).*(0.5*NameValueArgs.jitterBound);
     jitterMat = jitterMat - mean(jitterMat,1);
 
 elseif strcmp(NameValueArgs.outlierJitter,'none') && ...
@@ -545,8 +549,7 @@ elseif (isnumeric(NameValueArgs.plotLines) || NameValueArgs.plotLines == true) &
 end
 
 % Plot individual data points if specified
-if (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true) && ...
-   nGroups == nBoxes
+if (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true)
 
     currData = reshape(inputData,[],nBoxes);
 
@@ -556,53 +559,17 @@ if (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true) && 
         pointIdx = 1:nBoxes;
     end
 
-    for box = pointIdx
-        for sample = find(~all(isnan(currData),2))'
+    for sample = find(~all(isnan(currData),2))'
 
-            scatter(xCoordinates(box) - jitterMat(sample,box),...
-                    currData(sample,box),...
-                    pointSize,...
-                    'MarkerFaceColor', NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,box},...
-                    'MarkerEdgeColor', NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,box},...
-                    'Marker',          NameValueArgs.pointStyle,...
-                    'MarkerFaceAlpha', NameValueArgs.pointAlpha,...
-                    'MarkerEdgeAlpha', NameValueArgs.pointAlpha,...
-                    'Tag',            'Point');
+        scatter(xCoordinates(pointIdx) - jitterMat(sample,pointIdx),...
+                currData(sample,pointIdx),...
+                NameValueArgs.pointSize,...
+                vertcat(NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,pointIdx}),...
+                'Marker',          NameValueArgs.pointStyle,...
+                'MarkerFaceAlpha', NameValueArgs.pointAlpha,...
+                'MarkerEdgeAlpha', NameValueArgs.pointAlpha,...
+                'Tag',            'Point');
 
-        end
-    end
-
-elseif (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true) && ...
-       nGroups ~= nBoxes
-
-    currData = reshape(inputData,[],nBoxes);
-
-    if isnumeric(NameValueArgs.plotPoints)
-        pointIdx = NameValueArgs.plotPoints;
-    else
-        pointIdx = 1:nBoxes/nGroups;
-    end
-
-    boxIdx = reshape(1:nBoxes,[],nGroups)'; boxIdx = boxIdx(:,pointIdx); 
-    
-    boxNum = 1;
-    for group = 1:nGroups
-        for box = 1:size(boxIdx,2)
-            for sample = find(~all(isnan(currData),2))'
-
-                scatter(xCoordinates(boxIdx(group,box)) - jitterMat(sample,boxIdx(group,box)),...
-                        currData(sample,boxIdx(group,box)),...
-                        pointSize,...
-                        'MarkerFaceColor', NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,boxNum},...
-                        'MarkerEdgeColor', NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,boxNum},...
-                        'Marker',          NameValueArgs.pointStyle,...
-                        'MarkerFaceAlpha', NameValueArgs.pointAlpha,...
-                        'MarkerEdgeAlpha', NameValueArgs.pointAlpha,...
-                        'Tag',            'Point');
-
-            end
-            boxNum = boxNum + 1;
-        end
     end
 
 end
@@ -651,7 +618,7 @@ if NameValueArgs.plotLegend == true && ...
 
     for lgdEntry = 1:numel(NameValueArgs.lgdColors)
 
-        currData = inputData(inputLabels == lgdEntry,1);
+        currData = inputData(NameValueArgs.inputLabels == lgdEntry,1);
         med = median(currData,1,'omitnan');
 
         % Plot line with box color for legend
