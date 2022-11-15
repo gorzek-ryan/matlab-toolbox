@@ -53,7 +53,7 @@ function [xCoordinates,lgdObject] = boxPlot(inputData,NameValueArgs)
 %
 %     lgdColors (none) -- cell array of RBG vectors that specify legend colors.
 %
-%     lgdColumns (1) -- 
+%     lgdColumns (1) -- scalar that specifies the number of columns in the legend.
 %
 %     lgdOrientation ("horizontal") -- 
 %
