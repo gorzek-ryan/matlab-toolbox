@@ -1,79 +1,81 @@
 
-function [xCoordinates,lgdObject] = boxPlot(inputData,NameValueArgs)
+function [xCoordinates, legendObject] = boxPlot(inputData, NameValueArgs)
+%
 % BOXPLOT Plot boxplot from vector or matrix input.
+%
+% Input Arguments:
+%
+%     inputData
+%
+% Name-Value Arguments (default):
+%
+%     inputLabels
+%
+%     groupSize
+%     labelGroup
+%
+%     boxLabels
+%     boxColors
+%     boxAlpha
+%     boxEdgeColors
+%     boxEdgeWidth
+%     boxEdgeStyle
+%     boxEdgeAlpha
+%     boxSpacing
+%     boxCurvature
+%
+%     medianColors
+%     medianWidth
+%     medianStyle
+%     medianAlpha
+%
+%     whiskerColors
+%     whiskerWidth
+%     whiskerStyle
+%     whiskerAlpha
+%
+%     outlierColors
+%     outlierSize
+%     outlierStyle
+%     outlierAlpha
+%     outlierJitter
+%
+%     jitterWidth
+%
+%     pointDisplay
+%     pointColors
+%     pointSize
+%     pointStyle
+%     pointAlpha
+%     pointJitter
+%
+%     lineDisplay
+%     lineColors
+%     lineWidth
+%     lineStyle
+%     lineAlpha
+%
+%     legendLabels
+%     legendColors
+%     legendColumns
+%     legendFontSize
+%     legendLineHeight
+%     legendLineWidth
+%     legendOrientation
+%     legendBox
+%     legendLocation
+%     legendPosition
+%
+% Output Arguments:
+%
+%     xCoordinates
+%
+%     legendObject
 %
 % MIT License
 % Copyright (c) 2022 Ryan Gorzek
 % https://github.com/gorzek-ryan/matlab_viz/blob/main/LICENSE
 % https://opensource.org/licenses/MIT
-%
-% Dependencies: none
-% 
-% Input Arguments:
-%
-%   inputData -- vector or matrix of data for boxplot. If inputData is a matrix, 
-%                each column will be plotted as a box.If inputData is a vector, specify
-%                categorical name-value argument inputLabels to plot multiple boxes. 
-%
-%   Name-Value Arguments (default):
-%
-%     inputLabels ([]) -- vector of categorical labels for vector input.
-%
-%     groupSize (1) -- scalar that specifies the number of boxes by which to group the data (if grouping).
-%
-%     labelGroup (false) -- logical that specifies whether to shrink the number of x-axis labels to one per group (if grouping).
-%
-%     boxLabels ([1:nBoxes]) -- cell array of strings that specify x-axis labels.
-%
-%     boxColors ([0.7, 0.7, 0.7]) -- cell array of RGB vectors that specify box colors.
-%
-%     boxEdgeColors ([0.0, 0.0, 0.0]) -- 
-%
-%     boxLineWidth (1) -- scalar that specifies the line width of the box edges and whiskers.
-%
-%     whiskerColors ([0.0, 0.0, 0.0]) -- 
-%
-%     outlierSize (30) -- scalar that specifies the size of outlier points.
-%
-%     plotPoints (false) -- 
-%
-%     pointSize (10) -- 
-%
-%     pointColor ([0.0, 0.0, 0.0]) -- 
-%
-%     connectGroups (false) -- 
-%
-%     connectLineWidth () -- 
-%
-%     connectLineColor ([0.0, 0.0, 0.0]) -- 
-%
-%     plotLegend (false) -- logical that specifies whether or not to plot a legend with the specified parameters.
-%
-%     lgdLabels (none) -- cell array of strings that specify legend labels.
-%
-%     lgdColors (none) -- cell array of RBG vectors that specify legend colors.
-%
-%     lgdColumns (1) -- scalar that specifies the number of columns in the legend.
-%
-%     lgdOrientation ("horizontal") -- 
-%
-%     lgdBox ("off") -- string that specifies whether to show legend box. Options are "on" or "off".
-%
-%     lgdFontSize (12) -- scalar that specifies legend font size.
-%
-%     lgdLineHeight (1) -- scalar that specifies the height of legend markers.
-%
-%     lgdLineWidth (1) -- scalar that specifies the width of legend markers.
-%
-%     lgdLocation ("northeast") -- string that specifies legend location. See MATLAB legend documentation for options.
-%
-%     lgdPosition ([]) -- 
-%
-% Output Arguments:
-%
-%   xCoors -- vector of x-axis coordinates corresponding to each plotted box.
-%
-%   lgdObject -- legend object. See MATLAB legend documentation for more information.
 %
 
 arguments
@@ -111,38 +113,40 @@ arguments
     NameValueArgs.outlierAlpha (1,1) {mustBeInRange(NameValueArgs.outlierAlpha,0,1)} = 1
     NameValueArgs.outlierJitter {mustBeMember(NameValueArgs.outlierJitter,["none","rand","randn"])} = "none"
 
-    NameValueArgs.plotPoints {mustBeNumericOrLogical} = false
+    NameValueArgs.jitterWidth (1,1) {mustBeNumeric} = 0.75
+
+    NameValueArgs.pointDisplay {mustBeNumericOrLogical} = false
     NameValueArgs.pointColors {mustBeA(NameValueArgs.pointColors,"cell")} = {}
     NameValueArgs.pointSize (1,1) {mustBeNumeric} = 20
     NameValueArgs.pointStyle (1,1) string = "."
     NameValueArgs.pointAlpha (1,1) {mustBeInRange(NameValueArgs.pointAlpha,0,1)} = 1
     NameValueArgs.pointJitter {mustBeMember(NameValueArgs.pointJitter,["none","rand","randn"])} = "none"
 
-    NameValueArgs.jitterBound (1,1) {mustBeNumeric} = 0.75
-
-    NameValueArgs.plotLines {mustBeNumericOrLogical} = false
+    NameValueArgs.lineDisplay {mustBeNumericOrLogical} = false
     NameValueArgs.lineColors {mustBeA(NameValueArgs.lineColors,"cell")} = {}
     NameValueArgs.lineWidth (1,1) {mustBeNumeric} = 0.5
     NameValueArgs.lineStyle (1,1) string = "-"
     NameValueArgs.lineAlpha (1,1) {mustBeInRange(NameValueArgs.lineAlpha,0,1)} = 1
 
-    NameValueArgs.plotLegend (1,1) logical = false
-    NameValueArgs.lgdLabels (1,:) {mustBeA(NameValueArgs.lgdLabels,"cell")} = {}
-    NameValueArgs.lgdColors (1,:) {mustBeA(NameValueArgs.lgdColors,"cell")} = {}
-    NameValueArgs.lgdColumns (1,1) {mustBeNumeric} = 1
-    NameValueArgs.lgdOrientation {mustBeMember(NameValueArgs.lgdOrientation,["vertical","horizontal"])} = "horizontal"
-    NameValueArgs.lgdBox {mustBeMember(NameValueArgs.lgdBox,["on","off"])} = "off"
-    NameValueArgs.lgdFontSize (1,1) {mustBeNumeric} = 12
-    NameValueArgs.lgdLineHeight (1,1) {mustBeNumeric} = 1
-    NameValueArgs.lgdLineWidth (1,1) {mustBeNumeric} = 1
-    NameValueArgs.lgdLocation (1,1) string = "northeast"
-    NameValueArgs.lgdPosition (1,4) {mustBeInRange(NameValueArgs.lgdPosition,0,1)} = [0,0,0,0]
+    NameValueArgs.legendLabels (1,:) {mustBeA(NameValueArgs.legendLabels,"cell")} = {}
+    NameValueArgs.legendColors (1,:) {mustBeA(NameValueArgs.legendColors,"cell")} = {}
+    NameValueArgs.legendColumns (1,1) {mustBeNumeric} = 1
+    NameValueArgs.legendFontSize (1,1) {mustBeNumeric} = 12
+    NameValueArgs.legendLineHeight (1,1) {mustBeNumeric} = 1
+    NameValueArgs.legendLineWidth (1,1) {mustBeNumeric} = 1
+    NameValueArgs.legendOrientation {mustBeMember(NameValueArgs.legendOrientation,["vertical","horizontal"])} = "horizontal"
+    NameValueArgs.legendBox {mustBeMember(NameValueArgs.legendBox,["on","off"])} = "off"
+    NameValueArgs.legendLocation (1,1) string = "northeast"
+    NameValueArgs.legendPosition (1,4) = [0, 0, 0, 0]
 
 end
 
+% Reassign NameValueArgs structure to NVAs for short.
+NVAs = NameValueArgs;
+
 % Get number of boxes, groups, samples (including NaN), and missing values.
-nBoxes = numel(unique(NameValueArgs.inputLabels));
-nGroups = nBoxes/NameValueArgs.groupSize;
+nBoxes = numel(unique(NVAs.inputLabels));
+nGroups = nBoxes/NVAs.groupSize;
 nSamples = size(inputData,1);
 nMissing = nnz(all(isnan(inputData),2));
 
@@ -153,138 +157,138 @@ end
 
 % Reshape input data into a column vector and get unique labels.
 inputData = reshape(inputData,[],1);
-uniqueLabels = sort(unique(NameValueArgs.inputLabels),"ascend")';
+uniqueLabels = sort(unique(NVAs.inputLabels),"ascend")';
 
 % Set default box labels (numbered) if none are specified.
-if isempty(NameValueArgs.boxLabels) && ...
-   NameValueArgs.groupSize == 1
+if isempty(NVAs.boxLabels) && ...
+   NVAs.groupSize == 1
 
-    NameValueArgs.boxLabels = cellstr(string(1:nBoxes));
+    NVAs.boxLabels = cellstr(string(1:nBoxes));
 
-elseif isempty(NameValueArgs.boxLabels) && ...
-       NameValueArgs.groupSize > 1 && ...
-       NameValueArgs.labelGroups == false
+elseif isempty(NVAs.boxLabels) && ...
+       NVAs.groupSize > 1 && ...
+       NVAs.labelGroups == false
 
-    NameValueArgs.boxLabels = cellstr(string(1:NameValueArgs.groupSize));
+    NVAs.boxLabels = cellstr(string(1:NVAs.groupSize));
 
-elseif isempty(NameValueArgs.boxLabels) && ...
-       NameValueArgs.labelGroups == true
+elseif isempty(NVAs.boxLabels) && ...
+       NVAs.labelGroups == true
     
-    NameValueArgs.boxLabels = cellstr(string(1:nGroups));
+    NVAs.boxLabels = cellstr(string(1:nGroups));
 
 end
 
 % Set default box colors (gray) if none are specified, or replicate
 % single or group-level color specification.
-if isempty(NameValueArgs.boxColors)
-    NameValueArgs.boxColors = repmat({[0.7,0.7,0.7]},[1,nBoxes]);
-elseif numel(NameValueArgs.boxColors) == 1
-    NameValueArgs.boxColors = repmat(NameValueArgs.boxColors,[1,nBoxes]);
-elseif numel(NameValueArgs.boxColors) == NameValueArgs.groupSize
-    NameValueArgs.boxColors = repmat(NameValueArgs.boxColors,[1,nGroups]);
+if isempty(NVAs.boxColors)
+    NVAs.boxColors = repmat({[0.7,0.7,0.7]},[1,nBoxes]);
+elseif numel(NVAs.boxColors) == 1
+    NVAs.boxColors = repmat(NVAs.boxColors,[1,nBoxes]);
+elseif numel(NVAs.boxColors) == NVAs.groupSize
+    NVAs.boxColors = repmat(NVAs.boxColors,[1,nGroups]);
 end
 
 % Set default box edge colors (black) if none are specified, or replicate
 % single or group-level color specification.
-if isempty(NameValueArgs.boxEdgeColors)
-    NameValueArgs.boxEdgeColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
-elseif numel(NameValueArgs.boxEdgeColors) == 1
-    NameValueArgs.boxEdgeColors = repmat(NameValueArgs.boxEdgeColors,[1,nBoxes]);
-elseif numel(NameValueArgs.boxEdgeColors) == NameValueArgs.groupSize
-    NameValueArgs.boxEdgeColors = repmat(NameValueArgs.boxEdgeColors,[1,nGroups]);
+if isempty(NVAs.boxEdgeColors)
+    NVAs.boxEdgeColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
+elseif numel(NVAs.boxEdgeColors) == 1
+    NVAs.boxEdgeColors = repmat(NVAs.boxEdgeColors,[1,nBoxes]);
+elseif numel(NVAs.boxEdgeColors) == NVAs.groupSize
+    NVAs.boxEdgeColors = repmat(NVAs.boxEdgeColors,[1,nGroups]);
 end
 
 % Set default whisker colors (black) if none are specified, or replicate
 % single or group-level color specification.
-if isempty(NameValueArgs.whiskerColors)
-    NameValueArgs.whiskerColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
-elseif numel(NameValueArgs.whiskerColors) == 1
-    NameValueArgs.whiskerColors = repmat(NameValueArgs.whiskerColors,[1,nBoxes]);
-elseif numel(NameValueArgs.whiskerColors) == NameValueArgs.groupSize
-    NameValueArgs.whiskerColors = repmat(NameValueArgs.whiskerColors,[1,nGroups]);
+if isempty(NVAs.whiskerColors)
+    NVAs.whiskerColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
+elseif numel(NVAs.whiskerColors) == 1
+    NVAs.whiskerColors = repmat(NVAs.whiskerColors,[1,nBoxes]);
+elseif numel(NVAs.whiskerColors) == NVAs.groupSize
+    NVAs.whiskerColors = repmat(NVAs.whiskerColors,[1,nGroups]);
 end
 
 % Set default median colors (black) if none are specified, or replicate
 % single or group-level color specification.
-if isempty(NameValueArgs.medianColors)
-    NameValueArgs.medianColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
-elseif numel(NameValueArgs.medianColors) == 1
-    NameValueArgs.medianColors = repmat(NameValueArgs.medianColors,[1,nBoxes]);
-elseif numel(NameValueArgs.medianColors) == NameValueArgs.groupSize
-    NameValueArgs.medianColors = repmat(NameValueArgs.medianColors,[1,nGroups]);
+if isempty(NVAs.medianColors)
+    NVAs.medianColors = repmat({[0.0,0.0,0.0]},[1,nBoxes]);
+elseif numel(NVAs.medianColors) == 1
+    NVAs.medianColors = repmat(NVAs.medianColors,[1,nBoxes]);
+elseif numel(NVAs.medianColors) == NVAs.groupSize
+    NVAs.medianColors = repmat(NVAs.medianColors,[1,nGroups]);
 end
 
 % Set default outlier colors (matched to box colors) if none are specified,
 % or replicate single or group-level color specification.
-if isempty(NameValueArgs.outlierColors)
-    NameValueArgs.outlierColors = NameValueArgs.boxColors;
-elseif numel(NameValueArgs.outlierColors) == 1
-    NameValueArgs.outlierColors = repmat(NameValueArgs.outlierColors,[1,nBoxes]);
-elseif numel(NameValueArgs.outlierColors) == NameValueArgs.groupSize
-    NameValueArgs.outlierColors = repmat(NameValueArgs.outlierColors,[1,nGroups]);
+if isempty(NVAs.outlierColors)
+    NVAs.outlierColors = NVAs.boxColors;
+elseif numel(NVAs.outlierColors) == 1
+    NVAs.outlierColors = repmat(NVAs.outlierColors,[1,nBoxes]);
+elseif numel(NVAs.outlierColors) == NVAs.groupSize
+    NVAs.outlierColors = repmat(NVAs.outlierColors,[1,nGroups]);
 end
 
 % Set default point colors (black) if not specified.
-if isempty(NameValueArgs.pointColors)
-    NameValueArgs.pointColors = repmat({[0.0,0.0,0.0]},[nSamples,nBoxes]);
-elseif numel(NameValueArgs.pointColors) == 1
-    NameValueArgs.pointColors = repmat(NameValueArgs.pointColors,[nSamples,nBoxes]);
-elseif isvector(NameValueArgs.pointColors) && ...
-       any(size(NameValueArgs.pointColors) == NameValueArgs.groupSize)
-    NameValueArgs.pointColors = repmat(NameValueArgs.pointColors,[nSamples,nGroups]);
-elseif isvector(NameValueArgs.pointColors) && ...
-       any(size(NameValueArgs.pointColors) == nBoxes)
-    NameValueArgs.pointColors = repmat(NameValueArgs.pointColors,[nSamples,1]);
-elseif all(ismember(size(NameValueArgs.pointColors),[nSamples - nMissing,NameValueArgs.groupSize]))
-    NameValueArgs.pointColors = repmat(NameValueArgs.pointColors,[1,nGroups]);
+if isempty(NVAs.pointColors)
+    NVAs.pointColors = repmat({[0.0,0.0,0.0]},[nSamples,nBoxes]);
+elseif numel(NVAs.pointColors) == 1
+    NVAs.pointColors = repmat(NVAs.pointColors,[nSamples,nBoxes]);
+elseif isvector(NVAs.pointColors) && ...
+       any(size(NVAs.pointColors) == NVAs.groupSize)
+    NVAs.pointColors = repmat(NVAs.pointColors,[nSamples,nGroups]);
+elseif isvector(NVAs.pointColors) && ...
+       any(size(NVAs.pointColors) == nBoxes)
+    NVAs.pointColors = repmat(NVAs.pointColors,[nSamples,1]);
+elseif all(ismember(size(NVAs.pointColors),[nSamples - nMissing,NVAs.groupSize]))
+    NVAs.pointColors = repmat(NVAs.pointColors,[1,nGroups]);
 end
 
 % Check default color stream specification for point colors.
-point_defaultIdx = cell2mat(cellfun(@(x) strcmp(x,"default"),NameValueArgs.pointColors,"UniformOutput",false));
+point_defaultIdx = cell2mat(cellfun(@(x) strcmp(x,"default"),NVAs.pointColors,"UniformOutput",false));
 if any(point_defaultIdx,"all")
-    defaultColors = repmat(num2cell(colororder,2),[ceil(size(NameValueArgs.pointColors,1)/7), ...
-                                                   size(NameValueArgs.pointColors,2)]);
-    defaultColors = defaultColors(1:size(NameValueArgs.pointColors,1),:);
-    NameValueArgs.pointColors(point_defaultIdx) = defaultColors(point_defaultIdx);
+    defaultColors = repmat(num2cell(colororder,2),[ceil(size(NVAs.pointColors,1)/7), ...
+                                                   size(NVAs.pointColors,2)]);
+    defaultColors = defaultColors(1:size(NVAs.pointColors,1),:);
+    NVAs.pointColors(point_defaultIdx) = defaultColors(point_defaultIdx);
 end
 
 % Set default line colors (black) if not specified.
-nLines = nGroups*(NameValueArgs.groupSize - 1);
-if isempty(NameValueArgs.lineColors)
-    NameValueArgs.lineColors = repmat({[0.0,0.0,0.0]},[nSamples,nLines]);
-elseif numel(NameValueArgs.lineColors) == 1
-    NameValueArgs.lineColors = repmat(NameValueArgs.lineColors,[nSamples,nLines]);
-elseif isvector(NameValueArgs.lineColors) && ...
-       any(size(NameValueArgs.lineColors) == nGroups)
-    NameValueArgs.lineColors = NameValueArgs.lineColors(kron(1:nGroups,ones(nSamples,groupSize-1)));
-elseif isvector(NameValueArgs.lineColors) && ...
-       any(size(NameValueArgs.lineColors) == nLines)
-    NameValueArgs.lineColors = repmat(NameValueArgs.lineColors,[nSamples,1]);
-elseif all(ismember(size(NameValueArgs.lineColors),[nSamples - nMissing,nGroups]))
-    NameValueArgs.lineColors = NameValueArgs.lineColors(:,kron(1:nGroups,ones(1,groupSize-1)));
+nLines = nGroups*(NVAs.groupSize - 1);
+if isempty(NVAs.lineColors)
+    NVAs.lineColors = repmat({[0.0,0.0,0.0]},[nSamples,nLines]);
+elseif numel(NVAs.lineColors) == 1
+    NVAs.lineColors = repmat(NVAs.lineColors,[nSamples,nLines]);
+elseif isvector(NVAs.lineColors) && ...
+       any(size(NVAs.lineColors) == nGroups)
+    NVAs.lineColors = NVAs.lineColors(kron(1:nGroups,ones(nSamples,groupSize-1)));
+elseif isvector(NVAs.lineColors) && ...
+       any(size(NVAs.lineColors) == nLines)
+    NVAs.lineColors = repmat(NVAs.lineColors,[nSamples,1]);
+elseif all(ismember(size(NVAs.lineColors),[nSamples - nMissing,nGroups]))
+    NVAs.lineColors = NVAs.lineColors(:,kron(1:nGroups,ones(1,groupSize-1)));
 end
 
 % Check default color stream specification for line colors.
-line_defaultIdx = cell2mat(cellfun(@(x) strcmp(x,"default"),NameValueArgs.lineColors,"UniformOutput",false));
+line_defaultIdx = cell2mat(cellfun(@(x) strcmp(x,"default"),NVAs.lineColors,"UniformOutput",false));
 if any(line_defaultIdx,"all")
-    defaultColors = repmat(num2cell(colororder,2),[ceil(size(NameValueArgs.lineColors,1)/7), ...
-                                                   size(NameValueArgs.lineColors,2)]);
-    defaultColors = defaultColors(1:size(NameValueArgs.lineColors,1),:);
-    NameValueArgs.lineColors(line_defaultIdx) = defaultColors(line_defaultIdx);
+    defaultColors = repmat(num2cell(colororder,2),[ceil(size(NVAs.lineColors,1)/7), ...
+                                                   size(NVAs.lineColors,2)]);
+    defaultColors = defaultColors(1:size(NVAs.lineColors,1),:);
+    NVAs.lineColors(line_defaultIdx) = defaultColors(line_defaultIdx);
 end
 
 % Check boxLabels against nGroups to warn user about specifying labelGroups.
-if NameValueArgs.labelGroups == true && ...
-   numel(NameValueArgs.boxLabels) > nGroups
+if NVAs.labelGroups == true && ...
+   numel(NVAs.boxLabels) > nGroups
     error(["Number of box labels exceeds number of groups, " ...
            "did you mean to specify labelGroups = false?"]);
-elseif NameValueArgs.labelGroups == true && ...
-       numel(NameValueArgs.boxLabels) < nGroups
+elseif NVAs.labelGroups == true && ...
+       numel(NVAs.boxLabels) < nGroups
     error("Insufficient number of box labels for number of groups.");
-elseif NameValueArgs.labelGroups == false && ...
-       NameValueArgs.groupSize ~= 1 && ...
-       numel(NameValueArgs.boxLabels) == nGroups && ...
-       numel(NameValueArgs.boxColors) == NameValueArgs.groupSize
+elseif NVAs.labelGroups == false && ...
+       NVAs.groupSize ~= 1 && ...
+       numel(NVAs.boxLabels) == nGroups && ...
+       numel(NVAs.boxColors) == NVAs.groupSize
     error(["Insufficient number of box labels for number of groups, " ...
            "did you mean to specify labelGroups = true?"]);
 end
@@ -298,25 +302,25 @@ else
     for grp = 2:nGroups
         xCoordinates = horzcat(xCoordinates, initCoors + xCoordinates(end) + 0.4);
     end
-    xCoordinates = xCoordinates.*NameValueArgs.boxSpacing;
+    xCoordinates = xCoordinates.*NVAs.boxSpacing;
 end
 
 % Generate matrix of jitter if specified.
-if strcmp(NameValueArgs.outlierJitter,"rand") || ...
-   strcmp(NameValueArgs.pointJitter,"rand")
+if strcmp(NVAs.outlierJitter,"rand") || ...
+   strcmp(NVAs.pointJitter,"rand")
 
-    jitterMat = rand(size(reshape(inputData,[],nBoxes))).*(0.5*NameValueArgs.jitterBound);
+    jitterMat = rand(size(reshape(inputData,[],nBoxes))).*(0.5*NVAs.jitterWidth);
     jitterMat = jitterMat - mean(jitterMat,1);
 
-elseif strcmp(NameValueArgs.outlierJitter,"randn") || ...
-       strcmp(NameValueArgs.pointJitter,"randn")
+elseif strcmp(NVAs.outlierJitter,"randn") || ...
+       strcmp(NVAs.pointJitter,"randn")
 
     randnMat = randn(size(reshape(inputData,[],nBoxes)));
-    jitterMat = (randnMat./max(randnMat,[],1)).*(0.5*NameValueArgs.jitterBound);
+    jitterMat = (randnMat./max(randnMat,[],1)).*(0.5*NVAs.jitterWidth);
     jitterMat = jitterMat - mean(jitterMat,1);
 
-elseif strcmp(NameValueArgs.outlierJitter,"none") && ...
-       strcmp(NameValueArgs.pointJitter,"none")
+elseif strcmp(NVAs.outlierJitter,"none") && ...
+       strcmp(NVAs.pointJitter,"none")
 
     jitterMat = zeros(size(reshape(inputData,[],nBoxes)));
 
@@ -330,7 +334,7 @@ for box = uniqueLabels
 
     % Get current box location and data.
     boxNum = find(uniqueLabels == box);
-    currData = inputData(NameValueArgs.inputLabels == box,1);
+    currData = inputData(NVAs.inputLabels == box,1);
     
     % Plot box if there are at least 4 data points.
     if nnz(~isnan(currData)) > 4
@@ -352,63 +356,63 @@ for box = uniqueLabels
 
         % Plot box with bounds at quartiles.
         rectangle("Position",  [xCoordinates(boxNum)-0.25, lowerQuantile, 0.5, upperQuantile-lowerQuantile],...
-                  "FaceColor", [NameValueArgs.boxColors{boxNum}, NameValueArgs.boxAlpha],...
-                  "EdgeColor", [NameValueArgs.boxEdgeColors{boxNum}, NameValueArgs.boxEdgeAlpha],...
-                  "LineWidth",  NameValueArgs.boxEdgeWidth,...
-                  "LineStyle",  NameValueArgs.boxEdgeStyle,...
-                  "Curvature",  NameValueArgs.boxCurvature,...
+                  "FaceColor", [NVAs.boxColors{boxNum}, NVAs.boxAlpha],...
+                  "EdgeColor", [NVAs.boxEdgeColors{boxNum}, NVAs.boxEdgeAlpha],...
+                  "LineWidth",  NVAs.boxEdgeWidth,...
+                  "LineStyle",  NVAs.boxEdgeStyle,...
+                  "Curvature",  NVAs.boxCurvature,...
                   "Tag",       "Box");
 
         % Plot median line.
         line([xCoordinates(boxNum)-0.25, xCoordinates(boxNum)+0.25],...
              [boxMedian, boxMedian],...
-             "Color",    [NameValueArgs.medianColors{boxNum}, NameValueArgs.medianAlpha],...
-             "LineWidth", NameValueArgs.medianWidth,...
-             "LineStyle", NameValueArgs.medianStyle,...
+             "Color",    [NVAs.medianColors{boxNum}, NVAs.medianAlpha],...
+             "LineWidth", NVAs.medianWidth,...
+             "LineStyle", NVAs.medianStyle,...
              "Tag",      "Median");
 
         % Plot lower whisker.
         line([xCoordinates(boxNum), xCoordinates(boxNum)],...
              [lowerQuantile, lowerWhisker],...
-             "Color",    [NameValueArgs.whiskerColors{boxNum}, NameValueArgs.whiskerAlpha],...
-             "LineWidth", NameValueArgs.whiskerWidth,...
-             "LineStyle", NameValueArgs.whiskerStyle,...
+             "Color",    [NVAs.whiskerColors{boxNum}, NVAs.whiskerAlpha],...
+             "LineWidth", NVAs.whiskerWidth,...
+             "LineStyle", NVAs.whiskerStyle,...
              "Tag",      "Lower Whisker");
 
         % Plot upper whisker.
         line([xCoordinates(boxNum), xCoordinates(boxNum)],...
              [upperQuantile, upperWhisker],...
-             "Color",    [NameValueArgs.whiskerColors{boxNum}, NameValueArgs.whiskerAlpha],...
-             "LineWidth", NameValueArgs.whiskerWidth,...
-             "LineStyle", NameValueArgs.whiskerStyle,...
+             "Color",    [NVAs.whiskerColors{boxNum}, NVAs.whiskerAlpha],...
+             "LineWidth", NVAs.whiskerWidth,...
+             "LineStyle", NVAs.whiskerStyle,...
              "Tag",      "Upper Whisker");
 
         % Plot lower whisker bar.
         line([xCoordinates(boxNum)-0.1, xCoordinates(boxNum)+0.1],...
              [lowerWhisker, lowerWhisker],...
-             "Color",    [NameValueArgs.whiskerColors{boxNum}, NameValueArgs.whiskerAlpha],...
-             "LineWidth", NameValueArgs.whiskerWidth,...
-             "LineStyle", NameValueArgs.whiskerStyle,...
+             "Color",    [NVAs.whiskerColors{boxNum}, NVAs.whiskerAlpha],...
+             "LineWidth", NVAs.whiskerWidth,...
+             "LineStyle", NVAs.whiskerStyle,...
              "Tag",      "Lower Whisker Bar");
 
         % Plot upper whisker bar.
         line([xCoordinates(boxNum)-0.1, xCoordinates(boxNum)+0.1],...
              [upperWhisker, upperWhisker],...
-             "Color",    [NameValueArgs.whiskerColors{boxNum}, NameValueArgs.whiskerAlpha],...
-             "LineWidth", NameValueArgs.whiskerWidth,...
-             "LineStyle", NameValueArgs.whiskerStyle,...
+             "Color",    [NVAs.whiskerColors{boxNum}, NVAs.whiskerAlpha],...
+             "LineWidth", NVAs.whiskerWidth,...
+             "LineStyle", NVAs.whiskerStyle,...
              "Tag",      "Upper Whisker Bar");
 
         % Plot upper outliers.
         if any(currData > upperWhisker)
             scatter(xCoordinates(boxNum) - jitterMat(currData > upperWhisker,boxNum),...
                     currData(currData > upperWhisker),...
-                    NameValueArgs.outlierSize,...
-                    "MarkerFaceColor", NameValueArgs.outlierColors{boxNum},...
-                    "MarkerEdgeColor", NameValueArgs.outlierColors{boxNum},...
-                    "Marker",          NameValueArgs.outlierStyle,...
-                    "MarkerFaceAlpha", NameValueArgs.outlierAlpha,...
-                    "MarkerEdgeAlpha", NameValueArgs.outlierAlpha,...
+                    NVAs.outlierSize,...
+                    "MarkerFaceColor", NVAs.outlierColors{boxNum},...
+                    "MarkerEdgeColor", NVAs.outlierColors{boxNum},...
+                    "Marker",          NVAs.outlierStyle,...
+                    "MarkerFaceAlpha", NVAs.outlierAlpha,...
+                    "MarkerEdgeAlpha", NVAs.outlierAlpha,...
                     "Tag",            "Outlier");
             upperOutliers = currData(currData > upperWhisker);
         else
@@ -420,12 +424,12 @@ for box = uniqueLabels
 
             scatter(xCoordinates(boxNum) - jitterMat(currData < lowerWhisker,boxNum),...
                     currData(currData < lowerWhisker),...
-                    NameValueArgs.outlierSize,...
-                    "MarkerFaceColor", NameValueArgs.outlierColors{boxNum},...
-                    "MarkerEdgeColor", NameValueArgs.outlierColors{boxNum},...
-                    "Marker",          NameValueArgs.outlierStyle,...
-                    "MarkerFaceAlpha", NameValueArgs.outlierAlpha,...
-                    "MarkerEdgeAlpha", NameValueArgs.outlierAlpha,...
+                    NVAs.outlierSize,...
+                    "MarkerFaceColor", NVAs.outlierColors{boxNum},...
+                    "MarkerEdgeColor", NVAs.outlierColors{boxNum},...
+                    "Marker",          NVAs.outlierStyle,...
+                    "MarkerFaceAlpha", NVAs.outlierAlpha,...
+                    "MarkerEdgeAlpha", NVAs.outlierAlpha,...
                     "Tag",            "Outlier");
 
             lowerOutliers = currData(currData < lowerWhisker);
@@ -452,20 +456,20 @@ for box = uniqueLabels
         % Plot median line.
         line([xCoordinates(boxNum)-0.25, xCoordinates(boxNum)+0.25],...
              [boxMedian, boxMedian],...
-             "Color",    [NameValueArgs.medianColors{boxNum}, NameValueArgs.medianAlpha],...
-             "LineWidth", NameValueArgs.medianWidth,...
-             "LineStyle", NameValueArgs.medianStyle,...
+             "Color",    [NVAs.medianColors{boxNum}, NVAs.medianAlpha],...
+             "LineWidth", NVAs.medianWidth,...
+             "LineStyle", NVAs.medianStyle,...
              "Tag",      "Median");
 
         % Scatter outliers.
         scatter(xCoordinates(boxNum) - jitterMat(:,boxNum),...
                 currData,...
                 outlierSize,...
-                "MarkerFaceColor", NameValueArgs.outlierColors{boxNum},...
-                "MarkerEdgeColor", NameValueArgs.outlierColors{boxNum},...
-                "Marker",          NameValueArgs.outlierStyle,...
-                "MarkerFaceAlpha", NameValueArgs.outlierAlpha,...
-                "MarkerEdgeAlpha", NameValueArgs.outlierAlpha,...
+                "MarkerFaceColor", NVAs.outlierColors{boxNum},...
+                "MarkerEdgeColor", NVAs.outlierColors{boxNum},...
+                "Marker",          NVAs.outlierStyle,...
+                "MarkerFaceAlpha", NVAs.outlierAlpha,...
+                "MarkerEdgeAlpha", NVAs.outlierAlpha,...
                 "Tag",            "Outlier");
 
         % Store min/max from each box to set axis limits.
@@ -477,13 +481,13 @@ for box = uniqueLabels
 end
 
 % Connect groups with lines if specified.
-if (isnumeric(NameValueArgs.plotLines) || NameValueArgs.plotLines == true) && ...
+if (isnumeric(NVAs.plotLines) || NVAs.plotLines == true) && ...
    nGroups == nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(NameValueArgs.plotLines)
-        lineIdx = NameValueArgs.plotLines; 
+    if isnumeric(NVAs.plotLines)
+        lineIdx = NVAs.plotLines; 
     else
         lineIdx = 1:nBoxes; 
     end
@@ -493,21 +497,21 @@ if (isnumeric(NameValueArgs.plotLines) || NameValueArgs.plotLines == true) && ..
 
             plot(xCoordinates(lineIdx(connection:connection+1)) - jitterMat(sample,lineIdx(connection:connection+1)),...
                  currData(sample,lineIdx(connection:connection+1)),...
-                 "Color",    [NameValueArgs.lineColors{find(~all(isnan(currData),2)) == sample,connection}, NameValueArgs.lineAlpha],...
-                 "LineWidth", NameValueArgs.lineWidth,...
-                 "LineStyle", NameValueArgs.lineStyle,...
+                 "Color",    [NVAs.lineColors{find(~all(isnan(currData),2)) == sample,connection}, NVAs.lineAlpha],...
+                 "LineWidth", NVAs.lineWidth,...
+                 "LineStyle", NVAs.lineStyle,...
                  "Tag",      "Line");
 
         end
     end
 
-elseif (isnumeric(NameValueArgs.plotLines) || NameValueArgs.plotLines == true) && ...
+elseif (isnumeric(NVAs.plotLines) || NVAs.plotLines == true) && ...
        nGroups ~= nBoxes
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(NameValueArgs.plotLines)
-        lineIdx = NameValueArgs.plotLines;
+    if isnumeric(NVAs.plotLines)
+        lineIdx = NVAs.plotLines;
     else
         lineIdx = 1:nBoxes/nGroups;
     end
@@ -523,9 +527,9 @@ elseif (isnumeric(NameValueArgs.plotLines) || NameValueArgs.plotLines == true) &
 
                 plot(xCoordinates(boxIdx(group,connection:connection + 1)) - jitterMat(sample,boxIdx(group,connection:connection + 1)),...
                      currData(sample,boxIdx(group,connection:connection + 1)),...
-                     "Color",    [NameValueArgs.lineColors{find(~all(isnan(currData),2)) == sample,connectionNum}, NameValueArgs.lineAlpha],...
-                     "LineWidth", NameValueArgs.lineWidth,...
-                     "LineStyle", NameValueArgs.lineStyle,...
+                     "Color",    [NVAs.lineColors{find(~all(isnan(currData),2)) == sample,connectionNum}, NVAs.lineAlpha],...
+                     "LineWidth", NVAs.lineWidth,...
+                     "LineStyle", NVAs.lineStyle,...
                      "Tag",      "Line");
             
             end
@@ -537,12 +541,12 @@ elseif (isnumeric(NameValueArgs.plotLines) || NameValueArgs.plotLines == true) &
 end
 
 % Plot individual data points if specified.
-if (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true)
+if (isnumeric(NVAs.plotPoints) || NVAs.plotPoints == true)
 
     currData = reshape(inputData,[],nBoxes);
 
-    if isnumeric(NameValueArgs.plotPoints)
-        pointIdx = NameValueArgs.plotPoints;
+    if isnumeric(NVAs.plotPoints)
+        pointIdx = NVAs.plotPoints;
     else
         pointIdx = 1:nBoxes;
     end
@@ -551,11 +555,11 @@ if (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true)
 
         scatter(xCoordinates(pointIdx) - jitterMat(sample,pointIdx),...
                 currData(sample,pointIdx),...
-                NameValueArgs.pointSize,...
-                vertcat(NameValueArgs.pointColors{find(~all(isnan(currData),2)) == sample,pointIdx}),...
-                "Marker",          NameValueArgs.pointStyle,...
-                "MarkerFaceAlpha", NameValueArgs.pointAlpha,...
-                "MarkerEdgeAlpha", NameValueArgs.pointAlpha,...
+                NVAs.pointSize,...
+                vertcat(NVAs.pointColors{find(~all(isnan(currData),2)) == sample,pointIdx}),...
+                "Marker",          NVAs.pointStyle,...
+                "MarkerFaceAlpha", NVAs.pointAlpha,...
+                "MarkerEdgeAlpha", NVAs.pointAlpha,...
                 "Tag",            "Point");
 
     end
@@ -563,19 +567,19 @@ if (isnumeric(NameValueArgs.plotPoints) || NameValueArgs.plotPoints == true)
 end
 
 % Set x-axis limits.
-xlim([0.2*NameValueArgs.boxSpacing, xCoordinates(end)+(0.5*NameValueArgs.boxSpacing)]);
+xlim([0.2*NVAs.boxSpacing, xCoordinates(end)+(0.5*NVAs.boxSpacing)]);
 
 % Set x-axis tick labels.
 xLabPos = [];
-if NameValueArgs.labelGroups == true
+if NVAs.labelGroups == true
     for group = 1:(nBoxes/nGroups):nBoxes
         xLabPos = horzcat(xLabPos, median(xCoordinates(group : group+(nBoxes/nGroups)-1)));
     end
     set(gca,"xtick",      xLabPos,...
-            "xticklabel", NameValueArgs.boxLabels);
+            "xticklabel", NVAs.boxLabels);
 else 
     set(gca,"xtick",      xCoordinates,...
-            "xticklabel", NameValueArgs.boxLabels);
+            "xticklabel", NVAs.boxLabels);
 end
 
 % Set figure and axes appearance.
@@ -596,31 +600,30 @@ if ~all(isnan(maxMat),"all")
 end
 
 % Plot legend if specified.
-if NameValueArgs.plotLegend == true && ...
-   ~isempty(NameValueArgs.lgdLabels) && ...
-   ~isempty(NameValueArgs.lgdColors)
+if ~isempty(NVAs.legendLabels) && ...
+   ~isempty(NVAs.legendColors)
 
-    if NameValueArgs.lgdFontSize > 2
-        NameValueArgs.lgdLineHeight = (NameValueArgs.lgdFontSize - 2) * NameValueArgs.lgdLineHeight;
+    if NVAs.legendFontSize > 2
+        NVAs.legendLineHeight = (NVAs.legendFontSize - 2) * NVAs.legendLineHeight;
     end
 
-    for lgdEntry = 1:numel(NameValueArgs.lgdColors)
+    for legendEntry = 1:numel(NVAs.legendColors)
 
-        currData = inputData(NameValueArgs.inputLabels == lgdEntry,1);
+        currData = inputData(NVAs.inputLabels == legendEntry,1);
         med = median(currData,1,"omitnan");
 
         % Plot line with box color for legend.
-        line([xCoordinates(lgdEntry)-0.25, xCoordinates(lgdEntry)+0.25],...
+        line([xCoordinates(legendEntry)-0.25, xCoordinates(legendEntry)+0.25],...
              [med, med],...
-             "Color",     NameValueArgs.lgdColors{lgdEntry},...
-             "LineWidth", NameValueArgs.lgdLineHeight,...
+             "Color",     NVAs.legendColors{legendEntry},...
+             "LineWidth", NVAs.legendLineHeight,...
              "Tag",      "Legend Line");
     
         % Plot white line over line with box color for legend.
-        line([xCoordinates(lgdEntry)-0.25, xCoordinates(lgdEntry)+0.25],...
+        line([xCoordinates(legendEntry)-0.25, xCoordinates(legendEntry)+0.25],...
              [med, med],...
              "Color",    [1.0,1.0,1.0],...
-             "LineWidth", NameValueArgs.lgdLineHeight,...
+             "LineWidth", NVAs.legendLineHeight,...
              "Tag",      "Legend Line Cover");
 
         set(gca, "Children",circshift(gca().Children,-2,1));
@@ -629,23 +632,23 @@ if NameValueArgs.plotLegend == true && ...
 
     warning("off","MATLAB:handle_graphics:exceptions:SceneNode");
 
-    lgdObject = legend(findobj(gca, "Tag","Legend Line"),...
-                       strcat('\fontsize{',num2str(NameValueArgs.lgdFontSize),'}',NameValueArgs.lgdLabels),...
+    legendObject = legend(findobj(gca, "Tag","Legend Line"),...
+                       strcat('\fontsize{',num2str(NVAs.legendFontSize),'}',NVAs.legendLabels),...
                        "AutoUpdate", "off",...
-                       "NumColumns",  NameValueArgs.lgdColumns,...
-                       "Orientation", NameValueArgs.lgdOrientation,...
-                       "Box",         NameValueArgs.lgdBox,...
-                       "Location",    NameValueArgs.lgdLocation);
+                       "NumColumns",  NVAs.legendColumns,...
+                       "Orientation", NVAs.legendOrientation,...
+                       "Box",         NVAs.legendBox,...
+                       "Location",    NVAs.legendLocation);
 
-    lgdObject.ItemTokenSize = [30 * NameValueArgs.lgdLineWidth, 9];
+    legendObject.ItemTokenSize = [30 * NVAs.legendLineWidth, 9];
 
-    if any(NameValueArgs.lgdPosition)
-        lgdObject.Position = NameValueArgs.lgdPosition;
+    if any(NVAs.legendPosition)
+        legendObject.Position = NVAs.legendPosition;
     end
 
 else
     
-    lgdObject = [];
+    legendObject = [];
 
 end
 
